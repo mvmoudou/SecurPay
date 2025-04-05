@@ -185,42 +185,6 @@ def logout():
 
 from flask import make_response, request, render_template, json
 
-@app.route('/signup-modal', methods=['GET', 'POST'])
-def signup_modal():
-    if request.method == 'POST':
-        data = request.form
-
-        # ❌ Si email déjà utilisé
-        if User.query.filter_by(email=data['email']).first():
-            return jsonify({"message": "Cet email est déjà utilisé."}), 400
-
-        # ❌ Si username déjà utilisé
-        if User.query.filter_by(username=data['username']).first():
-            return jsonify({"message": "Ce nom d'utilisateur est déjà utilisé."}), 400
-
-        # ✅ Sinon, création du compte
-        user = User(
-            last_name=data['last_name'],
-            first_name=data['first_name'],
-            gender = data['gender'],
-            birthday=data['birthday'],
-            email=data['email'],
-            phone=data['phone'],
-            username=data['username'],
-            password=data['password'],
-            biometrics="SampleData"
-        )
-
-        try:
-            db.session.add(user)
-            db.session.commit()
-            session['username'] = user.username
-            session['first_name'] = user.first_name
-            session['last_name'] = user.last_name
-            session['gender'] = user.gender
-
-    except Exception as e:
-        return jsonify({'message': 'Erreur serveur'}), 500
 
 @app.route('/clear-temp-faces')
 def clear_temp_faces():
