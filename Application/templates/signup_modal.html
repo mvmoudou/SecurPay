@@ -59,7 +59,7 @@
             </div>
 
             <div class="buttons">
-                <button type="button" onclick="document.getElementById('modal').style.display='none'">Back</button>
+                <button type="button" onclick="document.getElementById('signup-modal').style.display='none'">Back</button>
                 <button type="submit">Sign Up</button>
             </div>
         </form>
@@ -68,8 +68,5 @@
     <div class="illustration">
         <img src="{{ url_for('static', filename='images/illustration.png') }}" alt="illustration">
     </div>
-
-    <!-- Fichier JS de la modal -->
-    <script src="{{ url_for('static', filename='js/signup_modal.js') }} " defer></script>
 
 </div>
