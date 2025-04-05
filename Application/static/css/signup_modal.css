@@ -1,5 +1,21 @@
 /* signup_modal.css - version compacte pour popup */
 
+#camera-preview,
+#camera-preview-login {
+    display: none;
+}
+
+.spin-icon {
+    animation: spin 1s linear infinite;
+    display: inline-block;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+
 .card {
     background: white;
     display: flex;
@@ -207,6 +223,32 @@ form {
     cursor: pointer;
     font-size: 1.2rem;
 }
+
+.popup-buttons {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.popup-confirm,
+.popup-cancel {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.popup-confirm {
+    background-color: #28a745;
+    color: white;
+}
+
+.popup-cancel {
+    background-color: #dc3545;
+    color: white;
+}
+
 
 @keyframes fadeInOut {
     0% { opacity: 0; transform: translateY(-10px); }
