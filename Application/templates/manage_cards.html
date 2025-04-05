@@ -13,7 +13,16 @@
         <!-- Section gauche -->
         <div class="left-section">
             <img src="{{ url_for('static', filename='images/card.png') }}" alt="Card" class="card-image">
-            <p class="card-owner">MME {{ last_name }} {{ first_name }}</p>
+            <p class="card-owner">
+                {% if gender == 'Male' %}
+                    Mr {{ last_name }} {{ first_name }}
+                {% elif gender == 'Female' %}
+                    Mrs {{ last_name }} {{ first_name }}
+                {% else %}
+                    {{ last_name }} {{ first_name }}
+                {% endif %}
+            </p>
+            
 
             <div class="actions">
                 <div class="action-btn">
