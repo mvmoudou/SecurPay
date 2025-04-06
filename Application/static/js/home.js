@@ -1,35 +1,62 @@
-// home.js
-
 document.addEventListener("DOMContentLoaded", function () {
-    const openBtn = document.getElementById("open-signup");
-    const modal = document.getElementById("modal");
-    const modalContent = document.getElementById("modal-content");
+    const openSignupBtn = document.getElementById("open-signup");
+    const openLoginBtn = document.getElementById("open-login");
 
-    openBtn.addEventListener("click", () => {
-        fetch("/signup-modal")
+    const signupModal = document.getElementById("signup-modal");
+    const signupContent = document.getElementById("signup-modal-content");
+    const loginModal = document.getElementById("login-modal");
+    const loginContent = document.getElementById("login-modal-content");
+
+    function loadModal(endpoint, modalElem, contentElem, scriptPath, callbackFunctionName, needsFaceApi = false) {
+        fetch(endpoint)
             .then(res => res.text())
             .then(html => {
-                modalContent.innerHTML = html;
-                modal.style.display = "flex";
+                contentElem.innerHTML = html;
+                modalElem.style.display = "flex";
 
-                // Charger dynamiquement le script
-                const script = document.createElement("script");
-                script.src = "/static/js/signup_modal.js";
-                script.onload = () => {
-                    // Appeler la fonction d’init après chargement du script
-                    if (typeof setupBiometricsCapture === "function") {
-                        setupBiometricsCapture();
-                    }
+                const loadUserScript = () => {
+                    const userScript = document.createElement("script");
+                    userScript.src = scriptPath;
+                    userScript.onload = () => {
+                        if (typeof window[callbackFunctionName] === "function") {
+                            window[callbackFunctionName]();
+                        }
+                    };
+                    document.body.appendChild(userScript);
                 };
-                document.body.appendChild(script);
-            });
-    });
 
-    // Fermer la modal si on clique à l'extérieur
+                if (needsFaceApi) {
+                    const faceApiScript = document.createElement("script");
+                    faceApiScript.src = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js";
+                    faceApiScript.onload = loadUserScript;
+                    document.body.appendChild(faceApiScript);
+                } else {
+                    loadUserScript();
+                }
+            });
+    }
+
+    if (openSignupBtn) {
+        openSignupBtn.addEventListener("click", () => {
+            loadModal("/signup-modal", signupModal, signupContent, "/static/js/signup_modal.js", "setupBiometricsCapture", true);
+        });
+    }
+
+    if (openLoginBtn) {
+        openLoginBtn.addEventListener("click", () => {
+            loadModal("/login-modal", loginModal, loginContent, "/static/js/login_modal.js", "setupLoginWithCamera", true);
+        });
+    }
+
+    // Fermer les modals si on clique à l'extérieur
     window.addEventListener("click", (e) => {
-        if (e.target === modal) {
-            modal.style.display = "none";
-            modalContent.innerHTML = "";
+        if (e.target === signupModal) {
+            signupModal.style.display = "none";
+            signupContent.innerHTML = "";
+        }
+        if (e.target === loginModal) {
+            loginModal.style.display = "none";
+            loginContent.innerHTML = "";
         }
     });
 });
