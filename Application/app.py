@@ -1,3 +1,4 @@
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, render_template, request, jsonify, session, redirect
 from flask_sqlalchemy import SQLAlchemy
 import os, shutil, base64, pickle
@@ -177,14 +178,67 @@ def home2():
 def about():
     return render_template('about.html')
 
+<<<<<<< HEAD
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'GET':
+        return render_template('login.html')
+
+    username = request.form.get('username')
+    password = request.form.get('password')
+
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        return jsonify({"message": "Ce compte n'existe pas. Veuillez vous inscrire."}), 404
+
+    if not check_password_hash(user.password, password):
+        return jsonify({"message": "Mot de passe incorrect. Cliquez sur 'mot de passe oublié' pour réinitialiser."}), 401
+
+    # Connexion réussie → on enregistre l’utilisateur en session
+    session['username'] = user.username
+    session['first_name'] = user.first_name
+    session['last_name'] = user.last_name
+    session['gender'] = user.gender
+
+    return jsonify({
+        "message": "Connexion réussie !",
+        "redirect": "/home2"
+    }), 200
+=======
+>>>>>>> c4c0ed79f958d1d8b6532637a8abc11c1bd719b7
 
 
 @app.route('/logout')
 def logout():
     return render_template('home.html')
 
-from flask import make_response, request, render_template, json
+# -------------------- ENREGISTREMENT DES FACES -------------------- #
+@app.route('/register-face', methods=['POST'])
+def register_face():
+    data = request.get_json()
+    image_data = data.get('image')
 
+    if not image_data:
+        return jsonify({'message': 'Aucune image reçue'}), 400
+
+    try:
+        header, encoded = image_data.split(',', 1)
+        img_bytes = base64.b64decode(encoded)
+        save_dir = os.path.join('static', 'faces', 'user_temp')
+        os.makedirs(save_dir, exist_ok=True)
+
+        file_count = len(os.listdir(save_dir))
+        filename = f"face_{file_count + 1:03}.png"
+        file_path = os.path.join(save_dir, filename)
+
+        with open(file_path, 'wb') as f:
+            f.write(img_bytes)
+
+        return jsonify({'message': f"Image enregistrée sous {filename}"})
+
+    except Exception as e:
+        return jsonify({'message': 'Erreur serveur'}), 500
 
 @app.route('/clear-temp-faces')
 def clear_temp_faces():
