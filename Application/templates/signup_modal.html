@@ -64,6 +64,17 @@
                 </button>
             </div>
 
+             <!-- Conditions d'utilisation -->
+             <div class="form-group cgu-group" id="form-group-cgu">
+                <span>Accept terms and conditions</span>
+                <input type="checkbox" id="accept-checkbox" name="accept_cgu" required>
+                <a href="/terms?from=signup" class="link-button" target="_blank">Read terms and conditions</a>
+            </div>
+            
+            
+            <input type="hidden" name="terms_accepted" id="terms_accepted" value="">
+            
+
             <!-- Zone d'aperçu vidéo -->
             <div id="camera-preview" class="video-container">
                 <video id="video" autoplay></video>
@@ -80,5 +91,6 @@
     <div class="illustration">
         <img src="{{ url_for('static', filename='images/illustration.png') }}" alt="illustration">
     </div>
-
+    
 </div>
+

@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/payment.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/manage_cards.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/add_card.css') }}">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     {% block head %}{% endblock %}
 </head>
@@ -44,6 +45,7 @@
     {% include 'payment.html' %}
     <script src="{{ url_for('static', filename='js/payment.js') }}"></script>
 
-    {% block scripts %}{% endblock %}
+    {% block scripts %}
+    {% endblock %}
 </body>
 </html>

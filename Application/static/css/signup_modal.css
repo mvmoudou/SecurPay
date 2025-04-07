@@ -76,7 +76,7 @@ form {
     color: #208A9D;
 }
 
-.form-group input {
+.form-group input:not([type="checkbox"]) {
     flex: 1;
     height: 30px;
     padding: 0 10px;
@@ -87,6 +87,7 @@ form {
     max-width: 400px;
     min-width: 150px;
 }
+
 
 .form-group input:focus {
     border: 2px solid #208A9D;
@@ -305,6 +306,60 @@ form {
 
 .select-group.open .arrow-icon {
     transform: rotate(90deg); /* flèche vers le bas */
+}
+
+
+/*Condition générale d'utilisation check et lien*/
+#form-group-cgu {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 14px;
+    color: #208A9D;
+}
+
+#form-group-cgu input[type="checkbox"] {
+    transform: scale(1.1);
+    accent-color: #208A9D;
+    cursor: pointer;
+}
+
+#form-group-cgu span {
+    color: #208A9D;
+    font-weight: bold;
+}
+
+#form-group-cgu a {
+    color: #208A9D;
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+#form-group-cgu a:hover {
+    color: #12606e;
+}
+
+/* Faux lien : bouton qui ressemble à un lien */
+#show-terms {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-left: 115px;
+    font-size: 14px;
+    color: #208A9D;
+    cursor: pointer;
+    font-family: 'Roboto', sans-serif;
+    width: 100px;
+    text-decoration: underline;
+}
+
+#show-terms:hover {
+    color: #126d7b;
+    text-decoration: underline;
+}
+
+#show-terms:focus {
+border: none;
 }
 
 

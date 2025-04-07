@@ -81,6 +81,14 @@ async function setupBiometricsCapture() {
                 return;
             }
         }
+
+        //  Vérifier que les CGU ont été acceptées
+        const cguCheckbox = document.getElementById("accept-checkbox");
+        if (!cguCheckbox || !cguCheckbox.checked) {
+            showPopup("Vous devez accepter les conditions générales d'utilisation.", "error");
+            await fetch("/clear-temp-faces");
+            return;
+        }
     
         // Affiche un popup "loading"
         let loadingPopup = showPopup("Traitement des données en cours...", "loading");
@@ -261,6 +269,36 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 });
+
+// Pour afficher terms_modal
+function initTermsModal() {
+    const openTermsBtn = document.getElementById("show-terms");
+    const modal = document.getElementById("terms-modal");
+    const overlay = document.getElementById("terms-overlay");
+
+    if (openTermsBtn && modal && overlay) {
+        openTermsBtn.addEventListener("click", () => {
+            console.log("Terms cliquée");
+            modal.classList.remove("hidden");
+            modal.style.display = "flex";
+            overlay.classList.remove("hidden");
+        });
+    }
+}
+
+window.addEventListener("load", () => {
+    if (typeof bindTermsModalEvents === "function") {
+        bindTermsModalEvents();
+    } else {
+        console.warn("❌ La fonction bindTermsModalEvents n’est pas disponible !");
+    }
+});
+
+
+
+
+
+
 
 
 

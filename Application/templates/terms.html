@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Conditions Générales d'Utilisation</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/terms.css') }}">
+</head>
+<body>
+    <div class="terms-container">
+        <div class="terms-box">
+            <h2>Conditions Générales d'Utilisation</h2>
+            <div class="terms-scroll">
+                <ul>
+                    <p style="font-weight: bold;">
+                        Bienvenue sur PaySecurApp. En créant un compte, vous acceptez les présentes Conditions Générales
+                        d’Utilisation.
+                    </p>
+
+                    
+                    <li>
+                        L’utilisation de notre service implique que vous respectiez les règles de sécurité et de confidentialité de vos données.
+                    </li>
+                    <li>
+                        Vos données biométriques sont strictement utilisées pour l’authentification sécurisée et ne sont jamais partagées avec des tiers.
+                    </li>
+                    <li>
+                        Vous pouvez supprimer votre compte à tout moment depuis vos paramètres.
+                    </li>
+                    <li>
+                        L'application est fournie "en l'état" sans garantie, et l'utilisateur est responsable de la sécurité de son mot de passe.
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="terms-actions">
+                <input type="checkbox" id="accept_from_terms">
+                <label for="accept_from_terms">J'accepte les conditions d'utilisation</label>
+            </div>
+
+            <div class="terms-footer">
+                <a href="/?open=signup" id="back-to-signup" class="return-btn">Retour au formulaire</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("back-to-signup").addEventListener("click", function (e) {
+            const checkbox = document.getElementById("accept_from_terms");
+            if (checkbox.checked) {
+                this.href = "/?open=signup&accept_cgu=yes";
+            } else {
+                this.href = "/?open=signup";
+            }
+        });
+    </script>
+</body>
+</html>

@@ -44,6 +44,13 @@ def signup_modal():
         cleanup_failed_registration()
         return jsonify({"message": "Cet email est déjà utilisé."}), 400
 
+
+    # Vérifie si l'utilisateur a accepté les conditions générales d'utilisation
+    if data.get('terms_accepted') != 'yes':
+        cleanup_failed_registration()
+        return jsonify({"message": "Veuillez accepter les conditions d'utilisation."}), 400
+
+
     if User.query.filter_by(username=data['username']).first():
         cleanup_failed_registration()
         return jsonify({"message": "Ce nom d'utilisateur est déjà utilisé."}), 400
@@ -145,12 +152,19 @@ def update_embeddings(username, new_embeddings, path='embeddings.pkl'):
             if isinstance(loaded, dict):
                 data = loaded
             else:
-                print("⚠️ embeddings.pkl contient un format inattendu. Réinitialisation.")
+                print(" embeddings.pkl contient un format inattendu. Réinitialisation.")
     
     data[username] = new_embeddings
 
     with open(path, 'wb') as f:
         pickle.dump(data, f)
+
+# Pour les conditions générales d'utilisation
+@app.route('/terms')
+def terms():
+    from_page = request.args.get("from", "")
+    return render_template('terms.html', from_page=from_page)
+
 
 
 class Card(db.Model):

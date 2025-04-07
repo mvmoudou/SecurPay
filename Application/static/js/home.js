@@ -60,3 +60,30 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+
+// Pour le retour au formulaire qui est en popup après avoir lu les conditions générales d'utilisation
+
+document.addEventListener("DOMContentLoaded", () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("open") === "signup") {
+        const openSignupBtn = document.getElementById("open-signup");
+        if (openSignupBtn) {
+            openSignupBtn.click();
+
+            // attendre que la modale se charge
+            const interval = setInterval(() => {
+                const checkbox = document.getElementById("accept-checkbox");
+                if (checkbox) {
+                    if (params.get("accept_cgu") === "yes") {
+                        checkbox.checked = true;
+                        const hiddenInput = document.getElementById("terms_accepted");
+                        if (hiddenInput) hiddenInput.value = "yes";
+                    }
+                    clearInterval(interval); // on arrête d’attendre
+                }
+            }, 100);
+        }
+    }
+});
+
+
