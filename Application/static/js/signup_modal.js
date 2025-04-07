@@ -223,3 +223,46 @@ function closeAllPopups() {
 }
 
 
+document.addEventListener("DOMContentLoaded", () => {
+    const select = document.getElementById("gender");
+    const arrowBtn = document.getElementById("arrow-btn");
+    const container = document.getElementById("select-toggle");
+    const selectGroup = container.closest(".select-group");
+
+    let isOpen = false;
+
+    // Toggle à l’ouverture avec la flèche
+    arrowBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        select.focus();
+        isOpen = !isOpen;
+        updateArrowState();
+    });
+
+    // Fermer quand l’utilisateur fait un choix
+    select.addEventListener("change", () => {
+        isOpen = false;
+        updateArrowState();
+    });
+
+    // Fermer aussi quand on clique ailleurs
+    select.addEventListener("blur", () => {
+        setTimeout(() => {
+            isOpen = false;
+            updateArrowState();
+        }, 100);
+    });
+
+    function updateArrowState() {
+        if (isOpen) {
+            selectGroup.classList.add("open");
+        } else {
+            selectGroup.classList.remove("open");
+        }
+    }
+});
+
+
+
+
+
