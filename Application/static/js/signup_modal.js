@@ -81,6 +81,14 @@ async function setupBiometricsCapture() {
                 return;
             }
         }
+
+        //  Vérifier que les CGU ont été acceptées
+        const cguCheckbox = document.getElementById("accept-checkbox");
+        if (!cguCheckbox || !cguCheckbox.checked) {
+            showPopup("Vous devez accepter les conditions générales d'utilisation.", "error");
+            await fetch("/clear-temp-faces");
+            return;
+        }
     
         // Affiche un popup "loading"
         let loadingPopup = showPopup("Traitement des données en cours...", "loading");
@@ -261,6 +269,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 });
+
+
+
 
 
 

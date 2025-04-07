@@ -43,6 +43,13 @@ def signup_modal():
         cleanup_failed_registration()
         return jsonify({"message": "Cet email est déjà utilisé."}), 400
 
+
+    # Vérifie si l'utilisateur a accepté les conditions générales d'utilisation
+    if data.get('terms_accepted') != 'yes':
+        cleanup_failed_registration()
+        return jsonify({"message": "Veuillez accepter les conditions d'utilisation."}), 400
+
+
     if User.query.filter_by(username=data['username']).first():
         cleanup_failed_registration()
         return jsonify({"message": "Ce nom d'utilisateur est déjà utilisé."}), 400
