@@ -151,12 +151,19 @@ def update_embeddings(username, new_embeddings, path='embeddings.pkl'):
             if isinstance(loaded, dict):
                 data = loaded
             else:
-                print("⚠️ embeddings.pkl contient un format inattendu. Réinitialisation.")
+                print(" embeddings.pkl contient un format inattendu. Réinitialisation.")
     
     data[username] = new_embeddings
 
     with open(path, 'wb') as f:
         pickle.dump(data, f)
+
+# Pour les conditions générales d'utilisation
+@app.route('/terms')
+def terms():
+    from_page = request.args.get("from", "")
+    return render_template('terms.html', from_page=from_page)
+
 
 
 class Card(db.Model):

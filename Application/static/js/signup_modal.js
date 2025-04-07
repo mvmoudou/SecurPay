@@ -270,6 +270,33 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+// Pour afficher terms_modal
+function initTermsModal() {
+    const openTermsBtn = document.getElementById("show-terms");
+    const modal = document.getElementById("terms-modal");
+    const overlay = document.getElementById("terms-overlay");
+
+    if (openTermsBtn && modal && overlay) {
+        openTermsBtn.addEventListener("click", () => {
+            console.log("Terms cliquée");
+            modal.classList.remove("hidden");
+            modal.style.display = "flex";
+            overlay.classList.remove("hidden");
+        });
+    }
+}
+
+window.addEventListener("load", () => {
+    if (typeof bindTermsModalEvents === "function") {
+        bindTermsModalEvents();
+    } else {
+        console.warn("❌ La fonction bindTermsModalEvents n’est pas disponible !");
+    }
+});
+
+
+
+
 
 
 

@@ -65,15 +65,15 @@
             </div>
 
              <!-- Conditions d'utilisation -->
-            <div class="form-group cgu-group" id="form-group-cgu">
+             <div class="form-group cgu-group" id="form-group-cgu">
                 <span>Accept terms and conditions</span>
-                <input type="checkbox" id="accept-cgu" name="accept_cgu" required>
-                <label for="accept-cgu">
-                    <a href="#" id="show-cgu">Read terms and Conditions</a>
-                </label>
+                <input type="checkbox" id="accept-checkbox" name="accept_cgu" required>
+                <a href="/terms?from=signup" class="link-button" target="_blank">Read terms and conditions</a>
             </div>
+            
+            
             <input type="hidden" name="terms_accepted" id="terms_accepted" value="">
-
+            
 
             <!-- Zone d'aperçu vidéo -->
             <div id="camera-preview" class="video-container">
@@ -91,7 +91,6 @@
     <div class="illustration">
         <img src="{{ url_for('static', filename='images/illustration.png') }}" alt="illustration">
     </div>
-    <script src="{{ url_for('static', filename='js/terms_modal.js') }}"></script>
+    
 </div>
 
-{% include 'terms_modal.html' %}
