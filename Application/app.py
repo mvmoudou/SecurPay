@@ -178,7 +178,6 @@ def home2():
 def about():
     return render_template('about.html')
 
-<<<<<<< HEAD
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
@@ -205,8 +204,7 @@ def login():
         "message": "Connexion réussie !",
         "redirect": "/home2"
     }), 200
-=======
->>>>>>> c4c0ed79f958d1d8b6532637a8abc11c1bd719b7
+
 
 
 @app.route('/logout')
