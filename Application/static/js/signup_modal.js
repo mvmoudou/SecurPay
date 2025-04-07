@@ -84,14 +84,14 @@ async function setupBiometricsCapture() {
 
         //  Vérifier que les CGU ont été acceptées
         const cguCheckbox = document.getElementById("accept-checkbox");
+        const hiddenInput = document.getElementById("terms_accepted");
         if (!cguCheckbox || !cguCheckbox.checked) {
             showPopup("Vous devez accepter les conditions générales d'utilisation.", "error");
-            await fetch("/clear-temp-faces");
             return;
         }
+        hiddenInput.value = "yes"; // assure que ça part dans la requête
+
     
-        // Affiche un popup "loading"
-        let loadingPopup = showPopup("Traitement des données en cours...", "loading");
     
         const formData = new FormData(form);
     
@@ -124,23 +124,30 @@ async function setupBiometricsCapture() {
     
             closeAllPopups();
             let finalMessage = "Traitement terminé !";
+            let openLoginModalAfter = false;
+            
             if (biometricResult.redirect === "/home2") {
                 finalMessage = "Bienvenue ! Redirection vers votre espace sécurisé...";
             } else if (biometricResult.redirect === "/login-modal" || biometricResult.redirect === "/") {
                 finalMessage = "Inscription réussie ! Redirection vers la page de connexion...";
+                openLoginModalAfter = true;
             }
-
+            
             loadingPopup.querySelector(".message").textContent = finalMessage;
             loadingPopup.classList.remove("loading");
             loadingPopup.classList.add("success");
             loadingPopup.querySelector(".icon i").className = "bi bi-check-circle-fill";
-
+            
             setTimeout(() => {
                 closeAllPopups();
-                if (biometricResult.redirect) {
+                if (openLoginModalAfter) {
+                    const openLoginBtn = document.getElementById("open-login");
+                    if (openLoginBtn) openLoginBtn.click(); // simule clic pour ouvrir modale
+                } else if (biometricResult.redirect) {
                     window.location.href = biometricResult.redirect;
                 }
             }, 3000);
+            
 
     
         } catch (error) {

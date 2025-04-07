@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 import os, shutil, base64, pickle
 import numpy as np
 import cv2
+import json
 from mtcnn import MTCNN
 from keras_facenet import FaceNet
 
@@ -46,7 +47,7 @@ def signup_modal():
 
 
     # Vérifie si l'utilisateur a accepté les conditions générales d'utilisation
-    if data.get('terms_accepted') != 'yes':
+    if data.get('terms_accepted') != "yes":
         cleanup_failed_registration()
         return jsonify({"message": "Veuillez accepter les conditions d'utilisation."}), 400
 
@@ -101,7 +102,7 @@ def process_faces():
         update_embeddings(username, embeddings)
 
         # ✅ Ne supprime pas user_temp ici
-        return jsonify({"message": "Traitement terminé", "redirect": "/home2"})
+        return jsonify({"message": "Traitement terminé", "redirect": "/login-modal"})
 
     except Exception as e:
         print("Erreur traitement des visages:", e)
@@ -345,9 +346,10 @@ def login_face_temp():
     return jsonify({'message': 'Image reçue'}), 200
 
 
-@app.route('/login-modal', methods=['POST'])
+@app.route('/login-modal', methods=['GET', 'POST'])
 def login_modal():
-    global temp_login_image_list
+    if request.method == 'GET':
+        return render_template('login_modal.html')
 
     username = request.form.get('username')
     password = request.form.get('password')
@@ -356,12 +358,20 @@ def login_modal():
     if not user:
         return jsonify({'message': "Nom d'utilisateur ou mot de passe invalide."}), 400
 
-    # Récupérer les images en base64
-    images = request.json.get('images', [])
-    if not images or len(images) == 0:
+    # 🔁 Lecture des images envoyées dans le form
+    images_data = request.form.get('images')
+    if not images_data:
         return jsonify({'message': "Aucune image reçue pour vérification."}), 400
 
-    # Charger les embeddings
+    try:
+        images = json.loads(images_data)
+    except Exception as e:
+        return jsonify({'message': "Erreur lors du décodage des images."}), 400
+
+    if not images:
+        return jsonify({'message': "Liste d'images vide."}), 400
+
+    # Chargement des embeddings en base
     with open("embeddings.pkl", "rb") as f:
         db_embeddings = pickle.load(f)
 
@@ -391,7 +401,7 @@ def login_modal():
                 if similarity > 0.7:
                     match_count += 1
         except Exception as e:
-            continue  # On ignore les erreurs pour les images ratées
+            continue
 
     if match_count >= 6:
         session['username'] = user.username

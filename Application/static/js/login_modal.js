@@ -16,22 +16,16 @@ function setupLoginWithCamera() {
     function closeModal() {
         const modal = document.getElementById("login-modal");
         const modalContent = document.getElementById("login-modal-content");
-    
         if (modal && modalContent) {
             modal.style.display = "none";
             modalContent.innerHTML = "";
-        } else {
-            console.warn("Impossible de fermer la modal : éléments manquants.");
         }
     }
-    
 
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        preview.style.display = "flex";
-
+    // ⏳ Délai de 10 secondes pour bien se positionner
+    setTimeout(async () => {
         try {
+            preview.style.display = "flex";
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             video.srcObject = stream;
 
@@ -40,41 +34,48 @@ function setupLoginWithCamera() {
             canvas.height = 240;
             const context = canvas.getContext("2d");
 
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            let images = [];
+            let count = 0;
 
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const imageData = canvas.toDataURL("image/png");
+            const interval = setInterval(async () => {
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                images.push(canvas.toDataURL("image/png"));
+                count++;
 
-            stream.getTracks().forEach(track => track.stop());
+                if (count >= 10) {
+                    clearInterval(interval);
+                    stream.getTracks().forEach(track => track.stop());
+                    preview.style.display = "none";
 
-            await fetch("/login-face-temp", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ image: imageData })
-            });
+                    // 🔄 popup loading
+                    const loading = showPopup("Vérification en cours...", "loading");
 
-            const formData = new FormData(form);
-            const res = await fetch("/login-modal", {
-                method: "POST",
-                body: formData
-            });
+                    const formData = new FormData(form);
+                    formData.append("images", JSON.stringify(images));
 
-            const data = await res.json();
+                    const res = await fetch("/login-modal", {
+                        method: "POST",
+                        body: formData,
+                    });
 
-            if (res.ok) {
-                showPopup(data.message, "success");
-                setTimeout(() => {
-                    if (data.redirect) window.location.href = data.redirect;
-                }, 3000);
-            } else {
-                showPopup(data.message || "Erreur", "error");
-            }
+                    const data = await res.json();
+                    closeAllPopups();
 
+                    if (res.ok) {
+                        showPopup(data.message, "success");
+                        setTimeout(() => {
+                            if (data.redirect) window.location.href = data.redirect;
+                        }, 3000);
+                    } else {
+                        showPopup(data.message || "Erreur", "error");
+                    }
+                }
+            }, 300); // 10 captures rapides
         } catch (err) {
             console.error("Erreur caméra:", err);
             status.textContent = "Erreur d'accès à la caméra.";
         }
-    });
+    }, 10000); // délai initial 10s
 }
 
 
