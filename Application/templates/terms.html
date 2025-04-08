@@ -44,13 +44,19 @@
 
     <script>
         document.getElementById("back-to-signup").addEventListener("click", function (e) {
-            const checkbox = document.getElementById("accept_from_terms");
+            e.preventDefault();
+    
+            const checkbox = document.getElementById("accept-checkbox");  // 🔁 cette ligne était fausse dans ton code
+    
             if (checkbox.checked) {
-                this.href = "/?open=signup&accept_cgu=yes";
+                localStorage.setItem("accept_cgu", "yes");
+                window.location.href = "/?open=signup&accept_cgu=yes";
             } else {
-                this.href = "/?open=signup";
+                localStorage.setItem("accept_cgu", "yes"); // On peut toujours laisser qu'il voit ses informations il pourra changer d'avis
+                window.location.href = "/?open=signup";
             }
         });
     </script>
+    
 </body>
 </html>

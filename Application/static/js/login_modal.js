@@ -1,4 +1,4 @@
-// login_modal.js
+let interval = null;
 
 function setupLoginWithCamera() {
     const preview = document.getElementById("camera-preview-login");
@@ -13,19 +13,26 @@ function setupLoginWithCamera() {
     backBtn?.addEventListener("click", closeModal);
     closeBtn?.addEventListener("click", closeModal);
 
-    function closeModal() {
-        const modal = document.getElementById("login-modal");
-        const modalContent = document.getElementById("login-modal-content");
-        if (modal && modalContent) {
-            modal.style.display = "none";
-            modalContent.innerHTML = "";
-        }
-    }
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-    // ⏳ Délai de 10 secondes pour bien se positionner
-    setTimeout(async () => {
+        const submitBtn = form.querySelector("button[type='submit']");
+        submitBtn.disabled = true;
+
+        const username = document.getElementById("login-username")?.value;
+        const password = document.getElementById("login-password")?.value;
+
+        if (!username || !password) {
+            showPopup("Veuillez renseigner vos identifiants.", "error");
+            submitBtn.disabled = false;
+            return;
+        }
+
+        preview.style.display = "flex";
+        status.textContent = "Veuillez bien positionner votre tête...";
+
         try {
-            preview.style.display = "flex";
+            await faceapi.nets.tinyFaceDetector.loadFromUri("/static/models/tiny_face_detector_model");
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             video.srcObject = stream;
 
@@ -35,51 +42,87 @@ function setupLoginWithCamera() {
             const context = canvas.getContext("2d");
 
             let images = [];
-            let count = 0;
+            let countdown = 10;
+            let startTime = Date.now();
 
-            const interval = setInterval(async () => {
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                images.push(canvas.toDataURL("image/png"));
-                count++;
+            interval = setInterval(async () => {
+                const elapsed = (Date.now() - startTime) / 1000;
 
-                if (count >= 10) {
-                    clearInterval(interval);
-                    stream.getTracks().forEach(track => track.stop());
-                    preview.style.display = "none";
+                const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
 
-                    // 🔄 popup loading
-                    const loading = showPopup("Vérification en cours...", "loading");
+                if (detections.length > 0) {
+                    startTime = Date.now(); // reset chrono
+                    status.textContent = "Restez comme ça...";
 
-                    const formData = new FormData(form);
-                    formData.append("images", JSON.stringify(images));
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    images.push(canvas.toDataURL("image/png"));
 
-                    const res = await fetch("/login-modal", {
-                        method: "POST",
-                        body: formData,
-                    });
+                    if (images.length >= 10) {
+                        clearInterval(interval);
+                        interval = null;
+                        stopLoginCamera();
+                        await sendLoginRequest(username, password, images, submitBtn);
+                    }
+                } else {
+                    status.textContent = `Veuillez bien positionner votre tête (${Math.ceil(10 - elapsed)}s restantes)`;
 
-                    const data = await res.json();
-                    closeAllPopups();
-
-                    if (res.ok) {
-                        showPopup(data.message, "success");
-                        setTimeout(() => {
-                            if (data.redirect) window.location.href = data.redirect;
-                        }, 3000);
-                    } else {
-                        showPopup(data.message || "Erreur", "error");
+                    if (elapsed >= countdown) {
+                        clearInterval(interval);
+                        interval = null;
+                        stopLoginCamera();
+                        submitBtn.disabled = false;
+                        showPopup("Temps écoulé. Aucun visage correctement détecté.", "error");
                     }
                 }
-            }, 300); // 10 captures rapides
+            }, 400);
+
         } catch (err) {
             console.error("Erreur caméra:", err);
             status.textContent = "Erreur d'accès à la caméra.";
+            form.querySelector("button[type='submit']").disabled = false;
         }
-    }, 10000); // délai initial 10s
+    });
 }
 
+async function sendLoginRequest(username, password, images, submitBtn) {
+    showFaceVerificationPopup();
+
+    try {
+        const res = await fetch("/login-modal", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password, images })
+        });
+
+        let data = { message: "Erreur inconnue." };
+        try {
+            data = await res.json();
+        } catch (err) {
+            console.warn("Erreur parsing JSON:", err);
+        }
+
+        closeFaceVerificationPopup();
+        submitBtn.disabled = false;
+
+        if (res.ok) {
+            showPopup("Connexion réussie ! Vous allez être redirigé vers votre espace personnel...", "success");
+            setTimeout(() => {
+                if (data.redirect) window.location.href = data.redirect;
+            }, 3000);
+        } else {
+            showPopup(data.message || "Échec de la connexion. Veuillez réessayer.", "error");
+        }
+
+    } catch (err) {
+        closeFaceVerificationPopup();
+        submitBtn.disabled = false;
+        console.error("Erreur login:", err);
+        showPopup("Erreur réseau ou serveur. Veuillez réessayer.", "error");
+    }
+}
 
 function showPopup(message, type = "success") {
+    closeAllPopups(); // empêche l’empilement
     const overlay = document.createElement("div");
     overlay.className = "popup-overlay";
     document.body.appendChild(overlay);
@@ -90,13 +133,12 @@ function showPopup(message, type = "success") {
         <span class="icon">
             <i class="bi ${
                 type === "error" ? "bi-x-circle-fill" :
-                type === "loading" ? "bi-hourglass-split" :
+                type === "loading" ? "bi-hourglass-split spin-icon" :
                 "bi-check-circle-fill"
             }"></i>
         </span>
         <span class="message">${message}</span>
         <span class="close-btn"><i class="bi bi-x-lg"></i></span>
-        ${type === "loading" ? '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>' : ''}
     `;
 
     document.body.appendChild(popup);
@@ -106,12 +148,46 @@ function showPopup(message, type = "success") {
         overlay.remove();
     });
 
-    // Ne pas supprimer tout de suite si loading
     if (type !== "loading") {
         setTimeout(() => {
-            if (document.body.contains(popup)) popup.remove();
-            if (document.body.contains(overlay)) overlay.remove();
+            popup.remove();
+            overlay.remove();
         }, 5000);
+    }
+
+    return popup;
+}
+
+function closeAllPopups() {
+    document.querySelectorAll(".popup, .popup-overlay").forEach(el => el.remove());
+}
+
+function stopLoginCamera() {
+    const video = document.getElementById("video-login");
+    if (video && video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
+    }
+    const preview = document.getElementById("camera-preview-login");
+    if (preview) preview.style.display = "none";
+}
+
+function closeModal() {
+    const modal = document.getElementById("login-modal");
+    const modalContent = document.getElementById("login-modal-content");
+    stopLoginCamera();
+    if (modal && modalContent) {
+        modal.style.display = "none";
+        modalContent.innerHTML = "";
     }
 }
 
+function showFaceVerificationPopup() {
+    document.getElementById('face-verification-popup').style.display = 'flex';
+    document.querySelector('.modal-content').style.opacity = '0.3';
+}
+
+function closeFaceVerificationPopup() {
+    document.getElementById('face-verification-popup').style.display = 'none';
+    document.querySelector('.modal-content').style.opacity = '1';
+}

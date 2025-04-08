@@ -119,7 +119,6 @@ def process_faces():
 
         return jsonify({"message": "Erreur serveur"}), 500
 
-
 def process_faces_internal():
     folder = os.path.join('static', 'faces', 'user_temp')
     embeddings = []
@@ -129,20 +128,31 @@ def process_faces_internal():
     for filename in os.listdir(folder):
         if filename.endswith('.png'):
             path = os.path.join(folder, filename)
-            img = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
-            results = detector.detect_faces(img)
-            if results and results[0]['confidence'] > 0.90:
-                x, y, w, h = results[0]['box']
-                x, y = max(x, 0), max(y, 0)
-                face = img[y:y+h, x:x+w]
-                face_resized = cv2.resize(face, (160, 160))
-                face_array = np.asarray(face_resized)
-
-                # ✅ CORRECT ici : on accède directement à l’indice [0]
-                embedding = embedder.embeddings([face_array])[0]
-                embeddings.append(embedding)
+            img = cv2.imread(path)
+            emb = extract_embedding_from_image(img, detector, embedder)
+            if emb is not None:
+                embeddings.append(emb)
 
     return embeddings
+
+
+# Fonction pour l'extraction des embeddings qu'on pourra utiliser aussi pour les différente reconnaissance faciale
+def extract_embedding_from_image(img, detector, embedder):
+    try:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        results = detector.detect_faces(img)
+        if results and results[0]['confidence'] > 0.90:
+            x, y, w, h = results[0]['box']
+            x, y = max(x, 0), max(y, 0)
+            face = img[y:y+h, x:x+w]
+            face = cv2.resize(face, (160, 160))
+            face_array = np.asarray(face)
+            embedding = embedder.embeddings([face_array])[0]
+            return embedding
+    except Exception as e:
+        print("Erreur embedding:", e)
+    return None
+
 
 def update_embeddings(username, new_embeddings, path='embeddings.pkl'):
     data = {}
@@ -348,37 +358,46 @@ def login_face_temp():
 
 @app.route('/login-modal', methods=['GET', 'POST'])
 def login_modal():
+    global temp_login_image_list
+
     if request.method == 'GET':
         return render_template('login_modal.html')
 
-    username = request.form.get('username')
-    password = request.form.get('password')
+    # Méthode POST avec JSON
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
+        images = data.get('images', [])
+    except Exception as e:
+        return jsonify({'message': "Requête invalide."}), 400
+
+    if not username or not password:
+        return jsonify({'message': "Identifiants manquants."}), 400
 
     user = User.query.filter_by(username=username, password=password).first()
     if not user:
         return jsonify({'message': "Nom d'utilisateur ou mot de passe invalide."}), 400
 
-    # 🔁 Lecture des images envoyées dans le form
-    images_data = request.form.get('images')
-    if not images_data:
+    if not images or len(images) == 0:
         return jsonify({'message': "Aucune image reçue pour vérification."}), 400
 
+    # Chargement des embeddings
     try:
-        images = json.loads(images_data)
+        with open("embeddings.pkl", "rb") as f:
+            db_embeddings = pickle.load(f)
     except Exception as e:
-        return jsonify({'message': "Erreur lors du décodage des images."}), 400
-
-    if not images:
-        return jsonify({'message': "Liste d'images vide."}), 400
-
-    # Chargement des embeddings en base
-    with open("embeddings.pkl", "rb") as f:
-        db_embeddings = pickle.load(f)
+        return jsonify({'message': "Erreur de chargement des données biométriques."}), 500
 
     if username not in db_embeddings:
         return jsonify({'message': "Aucune donnée biométrique enregistrée pour cet utilisateur."}), 400
 
     stored_embedding = db_embeddings[username]
+
+    # Si c'est une liste (plusieurs embeddings stockés), on fait la moyenne
+    if isinstance(stored_embedding, list) or isinstance(stored_embedding, np.ndarray) and len(np.array(stored_embedding).shape) == 2:
+        stored_embedding = np.mean(np.array(stored_embedding), axis=0)
+
     match_count = 0
 
     for image_data in images:
@@ -395,15 +414,30 @@ def login_modal():
                 x, y = max(x, 0), max(y, 0)
                 face = img[y:y+h, x:x+w]
                 face = cv2.resize(face, (160, 160))
-                new_embedding = embedder.embeddings([face])[0]
+                new_embedding = extract_embedding_from_image(img, detector, embedder)
+                if new_embedding is None:
+                    continue
+
+                stored_embedding = stored_embedding.flatten()
+                new_embedding = new_embedding.flatten()
                 similarity = cosine_similarity([new_embedding], [stored_embedding])[0][0]
 
-                if similarity > 0.7:
+
+                print("✅ Similarité:", similarity, flush=True)
+
+                print("Forme new_embedding:", new_embedding.shape, flush=True)
+                print("Forme stored_embedding:", stored_embedding.shape, flush=True)
+
+                print("Similarité: ", similarity, flush=True)
+
+                if similarity > 0.8:
                     match_count += 1
         except Exception as e:
+            print("Erreur traitement image:", str(e), flush=True)
             continue
 
-    if match_count >= 6:
+
+    if match_count >= 5:
         session['username'] = user.username
         session['first_name'] = user.first_name
         session['last_name'] = user.last_name
