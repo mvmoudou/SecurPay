@@ -214,6 +214,8 @@ def home2():
 
 @app.route('/about')
 def about():
+    if 'username' not in session:
+        return redirect('/')
     return render_template('about.html')
 
 
@@ -342,6 +344,20 @@ def login_face_temp():
     temp_login_image = data.get('image')
     return jsonify({'message': 'Image reçue'}), 200
 
+@app.route('/signup-modal', methods=['GET'])
+def signup_modal():
+    return render_template('signup_modal.html')
+
+@app.route('/login-modal', methods=['GET'])
+def login_modal():
+    return render_template('login_modal.html')
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
+@app.route('/signup')
+def signup():
+    return render_template('signup.html')
 
 @app.route('/login-modal', methods=['GET', 'POST'])
 def login_modal():
