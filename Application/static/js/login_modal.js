@@ -172,6 +172,8 @@ function stopLoginCamera() {
     if (preview) preview.style.display = "none";
 }
 
+
+
 function closeModal() {
     const modal = document.getElementById("login-modal");
     const modalContent = document.getElementById("login-modal-content");
@@ -180,7 +182,11 @@ function closeModal() {
         modal.style.display = "none";
         modalContent.innerHTML = "";
     }
+
+    const overlay = document.getElementById("modal-overlay");
+    if (overlay) overlay.style.display = "none";
 }
+
 
 function showFaceVerificationPopup() {
     document.getElementById('face-verification-popup').style.display = 'flex';

@@ -1,11 +1,13 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const openSignupBtn = document.getElementById("open-signup");
-    const openLoginBtn = document.getElementById("open-login");
 
-    const signupModal = document.getElementById("signup-modal");
-    const signupContent = document.getElementById("signup-modal-content");
-    const loginModal = document.getElementById("login-modal");
-    const loginContent = document.getElementById("login-modal-content");
+const openSignupBtn = document.getElementById("open-signup");
+const openLoginBtn = document.getElementById("open-login");
+
+const signupModal = document.getElementById("signup-modal");
+const signupContent = document.getElementById("signup-modal-content");
+const loginModal = document.getElementById("login-modal");
+const loginContent = document.getElementById("login-modal-content");
+
+document.addEventListener("DOMContentLoaded", function () {
 
     function loadModal(endpoint, modalElem, contentElem, scriptPath, callbackFunctionName, needsFaceApi = false) {
         fetch(endpoint)
@@ -13,16 +15,20 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(html => {
                 contentElem.innerHTML = html;
                 modalElem.style.display = "flex";
-
+    
+                // Affiche l'overlay
+                const overlay = document.getElementById("modal-overlay");
+                if (overlay) overlay.style.display = "block";
+    
                 const loadUserScript = () => {
                     const userScript = document.createElement("script");
                     userScript.src = scriptPath;
-
+    
                     userScript.onload = () => {
                         if (typeof window[callbackFunctionName] === "function") {
                             window[callbackFunctionName]();
-
-                            // 🔄 Restaurer les données après chargement du script
+    
+                            // Gère retour après CGU
                             const params = new URLSearchParams(window.location.search);
                             if (params.get("open") === "signup" && params.get("accept_cgu") === "yes") {
                                 if (typeof window.restoreSignupFormData === "function") {
@@ -32,10 +38,10 @@ document.addEventListener("DOMContentLoaded", function () {
                             }
                         }
                     };
-
+    
                     document.body.appendChild(userScript);
                 };
-
+    
                 if (needsFaceApi) {
                     const faceApiScript = document.createElement("script");
                     faceApiScript.src = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js";
@@ -46,15 +52,18 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             });
     }
+    
 
     if (openSignupBtn) {
-        openSignupBtn.addEventListener("click", () => {
+        openSignupBtn.addEventListener("click", (e) => {
+            e.preventDefault();
             loadModal("/signup-modal", signupModal, signupContent, "/static/js/signup_modal.js", "setupBiometricsCapture", true);
         });
     }
 
     if (openLoginBtn) {
-        openLoginBtn.addEventListener("click", () => {
+        openLoginBtn.addEventListener("click", (e) => {
+            e.preventDefault();
             loadModal("/login-modal", loginModal, loginContent, "/static/js/login_modal.js", "setupLoginWithCamera", true);
         });
     }

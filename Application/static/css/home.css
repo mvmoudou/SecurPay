@@ -89,3 +89,26 @@ body {
     margin-right: auto;
     color: #208A9D;
 }
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100vw;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 9998;
+    display: none;
+}
+
+.signup-modal,
+.login-modal {
+    z-index: 9999; /* Au-dessus de l'overlay */
+}
+
+.modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+

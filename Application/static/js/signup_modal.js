@@ -1,5 +1,7 @@
 let biometricDone = false;
 
+const backBtn = document.getElementById("back-signup");
+
 async function setupBiometricsCapture() {
     const preview = document.getElementById("camera-preview");
     const video = document.getElementById("video");
@@ -72,6 +74,20 @@ async function setupBiometricsCapture() {
             }
         }, 300);
     });
+
+    backBtn?.addEventListener("click", () => {
+        stopSignupCamera();
+
+        // Ferme la modale d'inscription
+        const modal = document.getElementById("signup-modal");
+        const content = document.getElementById("signup-modal-content");
+        const overlay = document.getElementById("modal-overlay");
+
+        if (modal) modal.style.display = "none";
+        if (content) content.innerHTML = "";
+        if (overlay) overlay.style.display = "none";
+    });
+
 
     form.addEventListener("submit", async function (e) {
         e.preventDefault();
@@ -309,7 +325,7 @@ window.addEventListener("load", () => {
     if (typeof bindTermsModalEvents === "function") {
         bindTermsModalEvents();
     } else {
-        console.warn("❌ La fonction bindTermsModalEvents n’est pas disponible !");
+        console.warn(" La fonction bindTermsModalEvents n’est pas disponible !");
     }
 });
 
@@ -363,6 +379,19 @@ backBtn?.addEventListener("click", () => {
     stopSignupCamera();
     closeModal();
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+    const closeBtn = document.querySelector(".close-signup-btn");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", () => {
+        stopSignupCamera(); // si tu veux couper la caméra aussi
+        document.getElementById("signup-modal").style.display = "none";
+        document.getElementById("signup-modal-content").innerHTML = "";
+        document.getElementById("modal-overlay").style.display = "none";
+      });
+    }
+  });
+  
 
 
 
