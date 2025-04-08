@@ -6,6 +6,14 @@ async function setupBiometricsCapture() {
     const status = document.getElementById("capture-status");
     const biometricsBtn = document.getElementById("biometrics-btn");
     const form = document.getElementById("signup-form");
+        // 🔁 Restaurer le formulaire si on revient des CGU
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("open") === "signup" && params.get("accept_cgu") === "yes") {
+        if (typeof restoreSignupFormData === "function") {
+            restoreSignupFormData();
+            window.history.replaceState(null, '', '/'); // Nettoie l'URL
+        }
+    }
 
     if (!preview || !video || !status || !form || !biometricsBtn) return;
 
@@ -84,14 +92,14 @@ async function setupBiometricsCapture() {
 
         //  Vérifier que les CGU ont été acceptées
         const cguCheckbox = document.getElementById("accept-checkbox");
+        const hiddenInput = document.getElementById("terms_accepted");
         if (!cguCheckbox || !cguCheckbox.checked) {
             showPopup("Vous devez accepter les conditions générales d'utilisation.", "error");
-            await fetch("/clear-temp-faces");
             return;
         }
+        hiddenInput.value = "yes"; // assure que ça part dans la requête
+
     
-        // Affiche un popup "loading"
-        let loadingPopup = showPopup("Traitement des données en cours...", "loading");
     
         const formData = new FormData(form);
     
@@ -121,26 +129,37 @@ async function setupBiometricsCapture() {
                 showPopup("Erreur lors du traitement des visages", "error");
                 return;
             }
+
     
             closeAllPopups();
             let finalMessage = "Traitement terminé !";
+            let openLoginModalAfter = false;
+            
+
+
+            
             if (biometricResult.redirect === "/home2") {
                 finalMessage = "Bienvenue ! Redirection vers votre espace sécurisé...";
             } else if (biometricResult.redirect === "/login-modal" || biometricResult.redirect === "/") {
                 finalMessage = "Inscription réussie ! Redirection vers la page de connexion...";
+                openLoginModalAfter = true;
             }
-
+            
             loadingPopup.querySelector(".message").textContent = finalMessage;
             loadingPopup.classList.remove("loading");
             loadingPopup.classList.add("success");
             loadingPopup.querySelector(".icon i").className = "bi bi-check-circle-fill";
-
+            
             setTimeout(() => {
                 closeAllPopups();
-                if (biometricResult.redirect) {
+                if (openLoginModalAfter) {
+                    const openLoginBtn = document.getElementById("open-login");
+                    if (openLoginBtn) openLoginBtn.click(); // simule clic pour ouvrir modale
+                } else if (biometricResult.redirect) {
                     window.location.href = biometricResult.redirect;
                 }
             }, 3000);
+            
 
     
         } catch (error) {
@@ -292,6 +311,57 @@ window.addEventListener("load", () => {
     } else {
         console.warn("❌ La fonction bindTermsModalEvents n’est pas disponible !");
     }
+});
+
+// Pour retrouver le formulaire comme tel lorsque l'utilisateur fini de lire les cgu puis 
+// rentre sur le formulaire
+
+function saveSignupFormData() {
+    const fields = [
+        "last_name", "first_name", "gender", "birthday",
+        "email", "phone", "username", "password"
+    ];
+    let formData = {};
+    fields.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) formData[id] = input.value;
+    });
+    localStorage.setItem("signupFormData", JSON.stringify(formData));
+}
+
+function restoreSignupFormData() {
+    const savedData = localStorage.getItem("signupFormData");
+    if (!savedData) return;
+
+    const formData = JSON.parse(savedData);
+    Object.entries(formData).forEach(([key, value]) => {
+        const input = document.getElementById(key);
+        if (input) input.value = value;
+    });
+}
+
+// On sauvegarde le formulaire 
+document.getElementById("read-terms")?.addEventListener("click", () => {
+    saveSignupFormData();
+});
+
+
+// Pour fermer la caméra 
+function stopSignupCamera() {
+    const video = document.getElementById("video");
+    if (video && video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
+    }
+    const preview = document.getElementById("camera-preview");
+    if (preview) preview.style.display = "none";
+}
+
+// Lorsqu'on sort de la modal
+
+backBtn?.addEventListener("click", () => {
+    stopSignupCamera();
+    closeModal();
 });
 
 

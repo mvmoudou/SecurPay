@@ -5,8 +5,8 @@
   
       <h2>Login</h2>
       <form id="login-form" method="POST">
-        <input type="text" name="username" placeholder="Nom d'utilisateur" required>
-        <input type="password" name="password" placeholder="Mot de passe" required>
+        <input type="text" name="username" id="login-username" placeholder="Nom d'utilisateur" required>
+        <input type="password" name="password" id="login-password" placeholder="Mot de passe" required>
         <button type="submit">Se connecter</button>
       </form>
   
@@ -14,6 +14,15 @@
         <video id="video-login" autoplay muted></video>
         <p id="login-capture-status">Préparation de la caméra...</p>
       </div>
+
+      <div id="face-verification-popup" class="verification-popup">
+        <div class="verification-content">
+            <div class="spinner"></div>
+            <p>Vérification biométrique en cours...</p>
+        </div>
+    </div>
+    
+    
   
       <button id="back-login" class="back-btn">Retour</button>
     </div>

@@ -17,11 +17,22 @@ document.addEventListener("DOMContentLoaded", function () {
                 const loadUserScript = () => {
                     const userScript = document.createElement("script");
                     userScript.src = scriptPath;
+
                     userScript.onload = () => {
                         if (typeof window[callbackFunctionName] === "function") {
                             window[callbackFunctionName]();
+
+                            // 🔄 Restaurer les données après chargement du script
+                            const params = new URLSearchParams(window.location.search);
+                            if (params.get("open") === "signup" && params.get("accept_cgu") === "yes") {
+                                if (typeof window.restoreSignupFormData === "function") {
+                                    window.restoreSignupFormData();
+                                    window.history.replaceState(null, '', '/');
+                                }
+                            }
                         }
                     };
+
                     document.body.appendChild(userScript);
                 };
 
@@ -61,8 +72,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
-// Pour le retour au formulaire qui est en popup après avoir lu les conditions générales d'utilisation
-
+// ✅ Pour cocher la case CGU automatiquement après lecture
 document.addEventListener("DOMContentLoaded", () => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("open") === "signup") {
@@ -70,20 +80,70 @@ document.addEventListener("DOMContentLoaded", () => {
         if (openSignupBtn) {
             openSignupBtn.click();
 
-            // attendre que la modale se charge
             const interval = setInterval(() => {
                 const checkbox = document.getElementById("accept-checkbox");
                 if (checkbox) {
+                    // ✅ Cocher la case si accept_cgu=yes
                     if (params.get("accept_cgu") === "yes") {
                         checkbox.checked = true;
                         const hiddenInput = document.getElementById("terms_accepted");
                         if (hiddenInput) hiddenInput.value = "yes";
                     }
-                    clearInterval(interval); // on arrête d’attendre
+
+                    // ✅ Restauration dans tous les cas
+                    if (typeof window.restoreSignupFormData === "function") {
+                        window.restoreSignupFormData();
+                    }
+
+                    window.history.replaceState(null, '', '/'); // Nettoie l'URL
+                    clearInterval(interval);
                 }
             }, 100);
         }
     }
 });
 
+
+// 💾 Sauvegarde du formulaire dans localStorage
+function saveSignupFormData() {
+    const fields = [
+        "last_name", "first_name", "gender", "birthday",
+        "email", "phone", "username", "password"
+    ];
+    let formData = {};
+    fields.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) formData[id] = input.value;
+    });
+    localStorage.setItem("signupFormData", JSON.stringify(formData));
+}
+
+// ♻️ Restauration du formulaire
+function restoreSignupFormData() {
+    const savedData = localStorage.getItem("signupFormData");
+    if (!savedData) return;
+    const formData = JSON.parse(savedData);
+    Object.entries(formData).forEach(([key, value]) => {
+        const input = document.getElementById(key);
+        if (input) input.value = value;
+    });
+}
+
+// Rendre les fonctions globales (utilisable dans signup_modal.js)
+window.saveSignupFormData = saveSignupFormData;
+window.restoreSignupFormData = restoreSignupFormData;
+
+// Nettoyage de la caméra en cas de fermuture modal par clik extérieur
+window.addEventListener("click", (e) => {
+    if (e.target === signupModal) {
+        if (typeof stopSignupCamera === "function") stopSignupCamera();
+        signupModal.style.display = "none";
+        signupContent.innerHTML = "";
+    }
+    if (e.target === loginModal) {
+        if (typeof stopLoginCamera === "function") stopLoginCamera();
+        loginModal.style.display = "none";
+        loginContent.innerHTML = "";
+    }
+});
 
