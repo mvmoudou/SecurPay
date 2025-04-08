@@ -66,6 +66,38 @@ body {
     font-size: 18px;
 }
 
+.terms-scroll {
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 1rem;
+    font-size: 15px;
+    line-height: 1.6;
+    scroll-behavior: smooth;
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: #208A9D #f0f0f0; /* Firefox */
+}
+
+/* Style personnalisée pour WebKit (Chrome, Edge, Safari) */
+.terms-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+.terms-scroll::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 10px;
+}
+
+.terms-scroll::-webkit-scrollbar-thumb {
+    background: #208A9D;
+    border-radius: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.terms-scroll::-webkit-scrollbar-thumb:hover {
+    background: #176E7E;
+}
+
+
 .terms-actions {
     display: flex;
     align-items: center;
