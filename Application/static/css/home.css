@@ -89,3 +89,73 @@ body {
     margin-right: auto;
     color: #208A9D;
 }
+/* Les images*/
+
+.overlap-2 {
+    position: relative;
+    width: 1029px;
+    height: 806px;
+    margin: 0 auto;
+}
+
+.img {
+    position: absolute;
+    width: 737px;
+    height: 84px;
+    top: 389px;
+    left: 34px;
+}
+
+.rectangle-2 {
+    position: absolute;
+    width: 97px;
+    height: 159px;
+    top: 284px;
+    left: 0;
+}
+
+.rectangle-3 {
+    position: absolute;
+    width: 738px;
+    height: 85px;
+    top: 333px;
+    left: 97px;
+}
+
+.line {
+    position: absolute;
+    width: 792px;
+    height: 21px;
+    top: 491px;
+    left: 146px;
+}
+
+.pay-secur-app {
+    position: absolute;
+    width: 838px;
+    height: 140px;
+    top: 331px;
+    left: 4px;
+}
+
+.temp-imagex-ykpv-p {
+    position: absolute;
+    width: 955px;
+    height: 806px;
+    top: 0;
+    left: 74px;
+    object-fit: cover;
+}
+
+.p {
+    position: absolute;
+    width: 930px;
+    top: 579px;
+    left: 46px;
+    font-family: "Roboto-Light", Helvetica, sans-serif;
+    font-weight: 300;
+    color: #208a9d;
+    font-size: 36px;
+    line-height: normal;
+}
+
