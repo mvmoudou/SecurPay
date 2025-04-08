@@ -1,2 +1,7 @@
 # Ignorer les captures faciales temporaires
 /static/faces/user_temp/
+# Ignorer la base de données
+Application/users.db
+# Ignorer les embeddings
+Application/embeddings.pkl
+

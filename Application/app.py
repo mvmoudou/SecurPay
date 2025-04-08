@@ -200,7 +200,10 @@ class Card(db.Model):
 def home():
     if 'username' not in session:
         return render_template('home.html')
-    return render_template('home2.html', username=session['username'], first_name=session['first_name'])
+    return render_template('home2.html', username=session['username'], first_name=session['first_name'],
+                            gender=session.get('gender', '')) 
+        
+       
 
 
 @app.route('/home2')
