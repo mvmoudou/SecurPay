@@ -1,2 +1,4 @@
 # Ignorer les captures faciales temporaires
 /static/faces/user_temp/
+/Application/users.db/
+/Application/embeddings.pkl/
