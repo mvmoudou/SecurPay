@@ -10,70 +10,82 @@ body {
     height: 100vh;
 }
 
-.page {
-    text-align: center;
-}
-
-button {
-    padding: 0.8rem 2rem;
-    font-size: 1rem;
-    background-color: white;
-    color: #208A9D;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: 0.3s;
-    font-weight: bold;
-}
-
-button:hover {
-    background-color: #208A9D;
-    color: white;
-    border: 1px solid white;
-}
-
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 999;
-}
-
-.modal-content {
-    background-color: white;
+.container {
+    max-width: 1200px;
+    margin-top: 9px;
+    margin-bottom: 5px;
+    margin-left: 45px;
+    margin-right: 5px;
     padding: 2rem;
-    border-radius: 10px;
-    max-height: 90vh;
-    overflow-y: auto;
-    width: 90%;
-    max-width: 1000px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.05);
+    height: 600px;
 }
 
-.popup {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background-color: #208A9D;
-    color: white;
-    padding: 1rem 1.5rem;
-    border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    font-weight: bold;
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #d0e8ef;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #208A9D;
+    font-weight: 500;
+    transition: 0.3s;
+}
+
+.nav-links a:hover, .nav-links a.active {
+    border-bottom: 2px solid #208A9D;
+    padding-bottom: 0.2rem;
+}
+
+.logo {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    z-index: 1001;
-    animation: fadein 0.5s ease;
+    font-weight: bold;
+    font-size: 1.5rem;
+    color: #208A9D;
 }
 
-@keyframes fadein {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+.logo img {
+    height: 32px;
+    width: 32px;
 }
 
+.welcome-section {
+    text-align: center;
+    padding: 3rem 1rem;
+    position: relative;
+}
+
+.app-name {
+    font-size: 4rem;
+    font-weight: 800;
+    color: #208A9D;
+    text-shadow: 2px 2px #9ae6f0;
+    margin-top: 1rem;
+    background-color: rgba(144, 238, 144, 0.4);
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+}
+
+.slogan {
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin-top: 20px;
+    margin-left: auto;
+    margin-right: auto;
+    color: #208A9D;
+}

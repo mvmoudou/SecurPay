@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}PaySecurApp - Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home2.css') }}">
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/home2.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/features.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/payment.css') }}">
@@ -21,18 +24,14 @@
             </div>
             <ul class="nav-links">
                 <li><a href="/home2" class="{% if active_page == 'home' %}active{% endif %}">Home</a></li>
-                <li><a href="#" id="open-features-link" class="{% if active_page == 'features' %}active{% endif %}">Features</a></li>
-                <li><a href="#" class="{% if active_page == 'security' %}active{% endif %}">Security</a></li>
-                <li><a href="#" class="{% if active_page == 'team' %}active{% endif %}">Team</a></li>
-                <li><a href="/logout">Log Out</a></li>
+                <li><a href="/features" class="{% if active_page == 'features' %}active{% endif %}">Features</a></li>
+                <li><a href="/security" class="{% if active_page == 'security' %}active{% endif %}">Security</a></li>
+                <li><a href="/team" class="{% if active_page == 'team' %}active{% endif %}">Team</a></li>
+                <li><a href="/login" class="{% if active_page == 'login' %}active{% endif %}">Log In</a></li>
+                <li><a href="/signup" class="{% if active_page == 'signup' %}active{% endif %}">Sign Up</a></li>
             </ul>
-            <div class="user-info">
-                <div class="avatar">
-                    <i class="bi bi-person-fill"></i>
-                </div>
-                <span>{{ first_name }}</span>
-            </div>
         </nav>
+        
 
         {% block content %}
         <!-- Le contenu de chaque page spécifique -->
