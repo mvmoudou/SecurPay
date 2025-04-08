@@ -336,6 +336,14 @@ embedder = FaceNet()
 
 # Pour stocker temporairement la dernière image capturée (base64 dans un vrai cas)
 temp_login_image = None
+@app.route('/reinitialisation_mdp', methods=['GET', 'POST'])
+def reinitialisation_mdp():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        # 🔐 Tu peux ici ajouter : vérification de l'email, envoi de lien, etc.
+        print(f"Demande de réinitialisation pour : {email}")
+        return redirect('/')
+    return render_template('reinitialisation_mdp.html')
 
 @app.route('/login-face-temp', methods=['POST', 'GET'])
 def login_face_temp():
