@@ -7,11 +7,18 @@ import cv2
 import json
 from mtcnn import MTCNN
 from keras_facenet import FaceNet
+from datetime import timedelta # Pour étendre la session de la session de l'utilisateur une fois qu'il 
+
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+app.secret_key = os.urandom(24)
+
+# Durée de session : 20 minutes
+app.permanent_session_lifetime = timedelta(minutes=20)
 
 db = SQLAlchemy(app)
 
@@ -191,7 +198,10 @@ class Card(db.Model):
 # -------------------- ROUTES -------------------- #
 @app.route('/')
 def home():
-    return render_template('home.html')
+    if 'username' not in session:
+        return render_template('home.html')
+    return render_template('home2.html', username=session['username'], first_name=session['first_name'])
+
 
 @app.route('/home2')
 def home2():
@@ -404,17 +414,18 @@ def login_modal():
 
                 print("Similarité: ", similarity, flush=True)
 
-                if similarity > 0.8:
+                if similarity > 0.6:
                     match_count += 1
         except Exception as e:
             print("Erreur traitement image:", str(e), flush=True)
             continue
 
 
-    if match_count >= 5:
+    if match_count >= 6:
         session['username'] = user.username
         session['first_name'] = user.first_name
         session['last_name'] = user.last_name
+        session.permanent = True  # On active la session une fois que l'utilisateur se connecte
         return jsonify({'message': "Connexion réussie !", 'redirect': '/home2'})
     else:
         return jsonify({'message': "Reconnaissance faciale échouée. Veuillez réessayer."}), 401
