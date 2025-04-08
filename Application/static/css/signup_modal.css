@@ -334,7 +334,7 @@ form {
     border-radius: 6px;
     background-color: #D9D9D9;
     height: 30px;
-    width: 68%;
+    width: 69%;
     padding: 0 10px;
 }
 
@@ -375,10 +375,16 @@ form {
     transition: transform 0.3s ease;
     pointer-events: none;
 }
+.arrow-icon {
+    transition: transform 0.3s ease;
+}
+
 
 .select-group.open .arrow-icon {
-    transform: rotate(90deg); /* flèche vers le bas */
+    transform: rotate(90deg);
+    transition: transform 0.3s ease;
 }
+
 
 
 /*Condition générale d'utilisation check et lien*/

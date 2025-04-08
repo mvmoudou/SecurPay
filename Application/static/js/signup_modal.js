@@ -1,8 +1,7 @@
-let biometricDone = false;
-
-const backBtn = document.getElementById("back-signup");
 
 async function setupBiometricsCapture() {
+    let biometricDone = false;
+    const backBtn = document.getElementById("back-signup");
     const preview = document.getElementById("camera-preview");
     const video = document.getElementById("video");
     const status = document.getElementById("capture-status");
@@ -21,6 +20,28 @@ async function setupBiometricsCapture() {
 
     await faceapi.nets.tinyFaceDetector.loadFromUri('/static/models/tiny_face_detector_model');
 
+    initGenderSelect();
+
+    backBtn?.addEventListener("click", () => {
+        stopSignupCamera();
+
+        // Ferme la modale d'inscription
+        const modal = document.getElementById("signup-modal");
+        const content = document.getElementById("signup-modal-content");
+        const overlay = document.getElementById("modal-overlay");
+
+        if (modal) modal.style.display = "none";
+        if (content) content.innerHTML = "";
+        if (overlay) overlay.style.display = "none";
+    });
+
+
+    // Lorsqu'on sort de la modal
+
+    backBtn?.addEventListener("click", () => {
+        stopSignupCamera();
+        closeModal();
+    });
     // 🎥 Lancement capture biométrique
     biometricsBtn.addEventListener("click", async () => {
         preview.style.display = "flex";
@@ -75,17 +96,14 @@ async function setupBiometricsCapture() {
         }, 300);
     });
 
-    backBtn?.addEventListener("click", () => {
-        stopSignupCamera();
 
-        // Ferme la modale d'inscription
-        const modal = document.getElementById("signup-modal");
-        const content = document.getElementById("signup-modal-content");
-        const overlay = document.getElementById("modal-overlay");
+    const closeBtnSignup = document.querySelector(".close-signup-btn");
 
-        if (modal) modal.style.display = "none";
-        if (content) content.innerHTML = "";
-        if (overlay) overlay.style.display = "none";
+    closeBtnSignup.addEventListener("click", () => {
+      stopSignupCamera(); // si tu veux couper la caméra aussi
+      document.getElementById("signup-modal").style.display = "none";
+      document.getElementById("signup-modal-content").innerHTML = "";
+      document.getElementById("modal-overlay").style.display = "none";
     });
 
 
@@ -266,44 +284,6 @@ function closeAllPopups() {
 }
 
 
-document.addEventListener("DOMContentLoaded", () => {
-    const select = document.getElementById("gender");
-    const arrowBtn = document.getElementById("arrow-btn");
-    const container = document.getElementById("select-toggle");
-    const selectGroup = container.closest(".select-group");
-
-    let isOpen = false;
-
-    // Toggle à l’ouverture avec la flèche
-    arrowBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        select.focus();
-        isOpen = !isOpen;
-        updateArrowState();
-    });
-
-    // Fermer quand l’utilisateur fait un choix
-    select.addEventListener("change", () => {
-        isOpen = false;
-        updateArrowState();
-    });
-
-    // Fermer aussi quand on clique ailleurs
-    select.addEventListener("blur", () => {
-        setTimeout(() => {
-            isOpen = false;
-            updateArrowState();
-        }, 100);
-    });
-
-    function updateArrowState() {
-        if (isOpen) {
-            selectGroup.classList.add("open");
-        } else {
-            selectGroup.classList.remove("open");
-        }
-    }
-});
 
 // Pour afficher terms_modal
 function initTermsModal() {
@@ -373,25 +353,45 @@ function stopSignupCamera() {
     if (preview) preview.style.display = "none";
 }
 
-// Lorsqu'on sort de la modal
-
-backBtn?.addEventListener("click", () => {
-    stopSignupCamera();
-    closeModal();
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-    const closeBtn = document.querySelector(".close-signup-btn");
-    if (closeBtn) {
-      closeBtn.addEventListener("click", () => {
-        stopSignupCamera(); // si tu veux couper la caméra aussi
-        document.getElementById("signup-modal").style.display = "none";
-        document.getElementById("signup-modal-content").innerHTML = "";
-        document.getElementById("modal-overlay").style.display = "none";
-      });
-    }
-  });
   
+
+  function initGenderSelect() {
+    const select = document.getElementById("gender");
+    const arrowBtn = document.getElementById("arrow-btn");
+    const container = document.getElementById("select-toggle");
+
+    if (!select || !arrowBtn || !container) return;
+
+    const selectGroup = container.closest(".select-group");
+    if (!selectGroup) return;
+
+    let isOpen = false;
+
+    arrowBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        isOpen = !isOpen;
+        selectGroup.classList.toggle("open", isOpen);
+        select.focus(); // accessibilité
+    });
+
+    select.addEventListener("change", () => {
+        isOpen = false;
+        selectGroup.classList.remove("open");
+    });
+
+    select.addEventListener("blur", () => {
+        setTimeout(() => {
+            isOpen = false;
+            selectGroup.classList.remove("open");
+        }, 150);
+    });
+}
+
+
+
+// Pour qu'elle soit accessible depuis home.js
+window.initGenderSelect = initGenderSelect;
+
 
 
 

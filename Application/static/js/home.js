@@ -27,6 +27,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     userScript.onload = () => {
                         if (typeof window[callbackFunctionName] === "function") {
                             window[callbackFunctionName]();
+                            if (typeof window.initGenderSelect === "function") {
+                                window.initGenderSelect();
+                            }
     
                             // Gère retour après CGU
                             const params = new URLSearchParams(window.location.search);
