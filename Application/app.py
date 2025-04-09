@@ -34,6 +34,33 @@ class User(db.Model):
     password = db.Column(db.String(100))
     biometrics = db.Column(db.Text)
 
+
+@app.route('/historique')
+def historique():
+    if 'username' not in session:
+        return redirect('/')
+
+    user = User.query.filter_by(username=session['username']).first()
+    
+    # Exemple de récupération du solde depuis ta base (si tu l'as)
+    # Ici on suppose un champ user.balance ou alors tu le calcules
+    balance = getattr(user, 'balance', 3000)
+
+    transactions = [
+        {"details": "Investment", "id": "#00053", "date": "02 Jan 2025 04:56 PM", "amount": "-45.00"},
+        {"details": "Online shopping", "id": "#00736", "date": "13 April 2024 09:33 AM", "amount": "-50.02"},
+        {"details": "Food", "id": "#00221", "date": "25 December 2024 03:16 PM", "amount": "-14.85"},
+    ]
+    overdraft = 500  # Exemple fixe
+    return render_template("historique.html",
+                            first_name=user.first_name,
+                            last_name=user.last_name,
+                            user_id=user.id,
+                            balance=balance,
+                            overdraft=overdraft,
+                            transactions=transactions)
+
+
 @app.route('/signup-modal', methods=['GET', 'POST'])
 def signup_modal():
     if request.method == 'GET':
