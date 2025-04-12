@@ -19,7 +19,7 @@
       </div>
       <ul class="nav-links">
         <li><a href="/home2" class="{% if active_page == 'home' %}active{% endif %}">Home</a></li>
-        <li><a href="/features">Features</a></li>
+        <li><a href="#" id="open-login-from-features">Features</a></li>
         <li><a href="/security">Security</a></li>
         <li><a href="/team">Team</a></li>
         <li><a href="/login-modal" id="open-login">Log In</a></li>
@@ -53,6 +53,10 @@
   <!-- Charger le fichier JavaScript -->
   <script src="{{ url_for('static', filename='js/home.js') }}"></script>
   <script src="{{ url_for('static', filename='js/signup_modal.js') }}"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+  <script defer src="{{ url_for('static', filename='js/login_modal.js') }}"></script>
+  
+
 
   <!-- Overlay général pour fond assombri -->
   <div id="modal-overlay" class="modal-overlay" style="display: none;"></div>

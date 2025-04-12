@@ -55,7 +55,7 @@ async function setupBiometricsCapture() {
         let count = 0;
         let startTime = Date.now();
 
-        const interval = setInterval(async () => {
+        interval = setInterval(async () => {
             const elapsed = (Date.now() - startTime) / 1000;
 
             if (elapsed >= 10) {
@@ -351,6 +351,11 @@ function stopSignupCamera() {
     }
     const preview = document.getElementById("camera-preview");
     if (preview) preview.style.display = "none";
+
+    if (interval) {
+        clearInterval(interval);
+        interval = null;
+    }
 }
 
   

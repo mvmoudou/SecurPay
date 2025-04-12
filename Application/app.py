@@ -237,7 +237,7 @@ def home():
 def home2():
     if 'username' not in session:
         return redirect('/')
-    return render_template('home2.html', username=session['username'], first_name=session['first_name'])
+    return render_template('home2.html', username=session['username'], first_name=session['first_name'], show_auth_modals=False)
 
 @app.route('/about')
 def about():
