@@ -33,6 +33,21 @@ body {
     border-bottom: 2px solid #d0e8ef;
 }
 
+.nav-links {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #208A9D;
+    font-weight: 500;
+    transition: 0.3s;
+}
+
+.nav-links a:hover,
 .nav-links a.active,
 .nav-links a:focus {
     border-bottom: 2px solid #208A9D;
@@ -41,6 +56,19 @@ body {
     color: #208A9D;
 }
 
+.logout-link {
+    background-color: transparent;
+    border: none;
+    color: #208A9D;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 16px;
+    transition: color 0.3s;
+}
+
+.logout-link:hover {
+    color: #126d7b;
+}
 
 .logo {
     display: flex;
@@ -56,47 +84,30 @@ body {
     width: 32px;
 }
 
-.nav-links {
-    list-style: none;
-    display: flex;
-    gap: 2rem;
-}
-
-.nav-links a {
-    text-decoration: none;
-    color: #208A9D;
-    font-weight: 500;
-    transition: 0.3s;
-}
-
-.nav-links a:hover,
-.nav-links a.active {
-    border-bottom: 2px solid #208A9D;
-    padding-bottom: 0.2rem;
-}
-
 .user-info {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background-color: #b8eaf2;
-    padding: 0.5rem 1rem;
+    background-color: #e6f9fc;
+    padding: 0.4rem 1rem;
     border-radius: 50px;
     font-weight: 500;
+    color: #208A9D;
 }
 
 .user-info .avatar {
-    background-color: #208A9D;
-    color: white;
+    background-color: white;
     padding: 0.4rem;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 0 3px rgba(0,0,0,0.1);
 }
 
 .user-info i {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
+    color: #208A9D;
 }
 
 /* Main Welcome Section */
@@ -118,7 +129,7 @@ body {
     color: #208A9D;
     text-shadow: 2px 2px #9ae6f0;
     margin-top: 1rem;
-    background-color: rgba(144, 238, 144, 0.4); /* vert transparent */
+    background-color: rgba(144, 238, 144, 0.4);
     display: inline-block;
     padding: 0.5rem 1rem;
     border-radius: 8px;
