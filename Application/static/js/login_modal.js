@@ -46,43 +46,53 @@ function setupLoginWithCamera() {
             let startTime = Date.now();
 
             interval = setInterval(async () => {
-                const elapsed = (Date.now() - startTime) / 1000;
+                try {
+                    const elapsed = (Date.now() - startTime) / 1000;
 
-                const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
+                    const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
 
-                if (detections.length > 0) {
-                    startTime = Date.now(); // reset chrono
-                    status.textContent = "Restez comme ça...";
+                    if (detections.length > 0) {
+                        startTime = Date.now(); // reset chrono
+                        status.textContent = "Restez comme ça...";
 
-                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    images.push(canvas.toDataURL("image/png"));
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        images.push(canvas.toDataURL("image/png"));
 
-                    if (images.length >= 10) {
-                        clearInterval(interval);
-                        interval = null;
-                        stopLoginCamera();
-                        await sendLoginRequest(username, password, images, submitBtn);
+                        if (images.length >= 10) {
+                            clearInterval(interval);
+                            interval = null;
+                            stopLoginCamera();
+                            await sendLoginRequest(username, password, images, submitBtn);
+                        }
+                    } else {
+                        status.textContent = `Veuillez bien positionner votre tête (${Math.ceil(10 - elapsed)}s restantes)`;
+
+                        if (elapsed >= countdown) {
+                            clearInterval(interval);
+                            interval = null;
+                            stopLoginCamera();
+                            submitBtn.disabled = false;
+                            showPopup("Temps écoulé. Aucun visage correctement détecté.", "error");
+                        }
                     }
-                } else {
-                    status.textContent = `Veuillez bien positionner votre tête (${Math.ceil(10 - elapsed)}s restantes)`;
-
-                    if (elapsed >= countdown) {
-                        clearInterval(interval);
-                        interval = null;
-                        stopLoginCamera();
-                        submitBtn.disabled = false;
-                        showPopup("Temps écoulé. Aucun visage correctement détecté.", "error");
-                    }
+                } catch (err) {
+                    console.error(" Erreur pendant la détection faciale :", err);
+                    clearInterval(interval);
+                    interval = null;
+                    stopLoginCamera();
+                    submitBtn.disabled = false;
+                    showPopup("Erreur pendant la détection faciale.", "error");
                 }
             }, 400);
 
         } catch (err) {
-            console.error("Erreur caméra:", err);
-            status.textContent = "Erreur d'accès à la caméra.";
+            console.error("Erreur d'accès à la caméra :", err.name, err.message);
+            status.textContent = "Erreur d'accès à la caméra : " + err.message;
             form.querySelector("button[type='submit']").disabled = false;
         }
     });
 }
+
 
 async function sendLoginRequest(username, password, images, submitBtn) {
     showFaceVerificationPopup();
@@ -170,6 +180,11 @@ function stopLoginCamera() {
     }
     const preview = document.getElementById("camera-preview-login");
     if (preview) preview.style.display = "none";
+
+    if (interval) {
+        clearInterval(interval);
+        interval = null;
+    }
 }
 
 
@@ -197,3 +212,4 @@ function closeFaceVerificationPopup() {
     document.getElementById('face-verification-popup').style.display = 'none';
     document.querySelector('.modal-content').style.opacity = '1';
 }
+

@@ -31,22 +31,8 @@
 
                 <li><a href="/security" class="{% if active_page == 'security' %}active{% endif %}">Security</a></li>
                 <li><a href="/team" class="{% if active_page == 'team' %}active{% endif %}">Team</a></li>
-                {% if session.get('username') %}
-                <li>
-                    <a href="/logout" class="logout-link">Log Out</a>
-                </li>
-                <li class="user-info">
-                    <div class="avatar">
-                        <i class="bi bi-person-circle"></i>
-                    </div>
-                    <span>{{ session.get('first_name', 'User') }}</span>
-                </li>
-            {% else %}
                 <li><a href="/login" class="{% if active_page == 'login' %}active{% endif %}">Log In</a></li>
                 <li><a href="/signup" class="{% if active_page == 'signup' %}active{% endif %}">Sign Up</a></li>
-            {% endif %}
-            
-            
             </ul>
         </nav>
         
@@ -62,19 +48,7 @@
     {% include 'payment.html' %}
     <script src="{{ url_for('static', filename='js/payment.js') }}"></script>
 
-    {% if show_auth_modals %}
-    {% include 'login_modal.html' %}
-    <script defer src="{{ url_for('static', filename='js/login_modal.js') }}"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
-    {% endif %}
-
-
-
     {% block scripts %}
-    <script src="{{ url_for('static', filename='js/historique.js') }}"></script>
-
-
-
     {% endblock %}
 </body>
 </html>

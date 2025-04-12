@@ -19,21 +19,25 @@
       </div>
       <ul class="nav-links">
         <li><a href="/home2" class="{% if active_page == 'home' %}active{% endif %}">Home</a></li>
-        <li><a href="/features">Features</a></li>
+        <li><a href="#" id="open-login-from-features">Features</a></li>
         <li><a href="/security">Security</a></li>
         <li><a href="/team">Team</a></li>
-        <li><a href="#" id="open-login">Log In</a></li>
-        <li><a href="#" id="open-signup">Sign Up</a></li>
-        
+        <li><a href="/login-modal" id="open-login">Log In</a></li>
+        <li><a href="/signup" id="open-signup">Sign Up</a></li>
       </ul>
     </nav>
 
-    <main class="welcome-section">
-      <h1 class="app-name">PaySecurApp</h1>
-      <p class="slogan">
+    <div class="overlap-2">
+      <img class="img" src="{{ url_for('static', filename='images/rectangle-19.png') }}" />
+      <img class="rectangle-2" src="{{ url_for('static', filename='images/rectangle-20.png') }}" />
+      <img class="rectangle-3" src="{{ url_for('static', filename='images/rectangle-22.svg') }}" />
+      <img class="line" src="{{ url_for('static', filename='images/line-6.png') }}" />
+      <img class="pay-secur-app" src="{{ url_for('static', filename='images/pay-secur-app.png') }}" />
+      <img class="temp-imagex-ykpv-p" src="{{ url_for('static', filename='images/temp-imagex-ykpv-p.png') }}"/>
+      <p class="p">
         Enjoy smooth and secure payments with next-gen facial recognition — your face is your password!
       </p>
-    </main>
+    </div>
   </div>
 
   <!-- Modal container for signup -->
@@ -49,6 +53,10 @@
   <!-- Charger le fichier JavaScript -->
   <script src="{{ url_for('static', filename='js/home.js') }}"></script>
   <script src="{{ url_for('static', filename='js/signup_modal.js') }}"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+  <script defer src="{{ url_for('static', filename='js/login_modal.js') }}"></script>
+  
+
 
   <!-- Overlay général pour fond assombri -->
   <div id="modal-overlay" class="modal-overlay" style="display: none;"></div>

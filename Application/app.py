@@ -8,31 +8,45 @@ import json
 from mtcnn import MTCNN
 from keras_facenet import FaceNet
 from datetime import timedelta # Pour étendre la session de la session de l'utilisateur une fois qu'il 
+from models import db, User, Card
 
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-app.secret_key = os.urandom(24)
-
-# Durée de session : 20 minutes
 app.permanent_session_lifetime = timedelta(minutes=20)
 
-db = SQLAlchemy(app)
+db.init_app(app)
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    last_name = db.Column(db.String(100))
-    first_name = db.Column(db.String(100))
-    gender = db.Column(db.String(1))
-    birthday = db.Column(db.String(20))
-    email = db.Column(db.String(120), unique=True)
-    phone = db.Column(db.String(20))
-    username = db.Column(db.String(100), unique=True)
-    password = db.Column(db.String(100))
-    biometrics = db.Column(db.Text)
+
+
+
+@app.route('/historique')
+def historique():
+    if 'username' not in session:
+        return redirect('/')
+
+    user = User.query.filter_by(username=session['username']).first()
+    
+    # Exemple de récupération du solde depuis ta base (si tu l'as)
+    # Ici on suppose un champ user.balance ou alors tu le calcules
+    balance = getattr(user, 'balance', 3000)
+
+    transactions = [
+        {"details": "Investment", "id": "#00053", "date": "02 Jan 2025 04:56 PM", "amount": "-45.00"},
+        {"details": "Online shopping", "id": "#00736", "date": "13 April 2024 09:33 AM", "amount": "-50.02"},
+        {"details": "Food", "id": "#00221", "date": "25 December 2024 03:16 PM", "amount": "-14.85"},
+    ]
+    overdraft = 500  # Exemple fixe
+    return render_template("historique.html",
+                            first_name=user.first_name,
+                            last_name=user.last_name,
+                            user_id=user.id,
+                            balance=balance,
+                            overdraft=overdraft,
+                            transactions=transactions)
+
 
 @app.route('/signup-modal', methods=['GET', 'POST'])
 def signup_modal():
@@ -185,16 +199,6 @@ def terms():
 
 
 
-class Card(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    expiration = db.Column(db.String(7))
-    cvv = db.Column(db.String(4))
-    holder_name = db.Column(db.String(100))
-    billing_address = db.Column(db.String(200))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-
-    user = db.relationship('User', backref=db.backref('cards', lazy=True))
-
 # -------------------- ROUTES -------------------- #
 @app.route('/')
 def home():
@@ -210,7 +214,7 @@ def home():
 def home2():
     if 'username' not in session:
         return redirect('/')
-    return render_template('home2.html', username=session['username'], first_name=session['first_name'])
+    return render_template('home2.html', username=session['username'], first_name=session['first_name'], show_auth_modals=False)
 
 @app.route('/about')
 def about():
@@ -296,14 +300,33 @@ def add_card():
     if 'username' not in session:
         return redirect('/')
 
+    user = User.query.filter_by(username=session['username']).first()
+    if not user:
+        return redirect('/')
+
     if request.method == 'POST':
+        card_number = request.form['card_number']  # 🆕
         expiration = request.form['expiration']
         cvv = request.form['cvv']
         holder_name = request.form['holder_name']
         billing_address = request.form['billing_address']
 
-        print("Carte ajoutée :", expiration, cvv, holder_name, billing_address)
-        return redirect('/manage_cards')
+        # Création de la carte avec chiffrement auto du numéro
+        new_card = Card(
+            card_number=card_number,
+            expiration=expiration,
+            cvv=cvv,
+            holder_name=holder_name,
+            billing_address=billing_address,
+            user=user
+        )
+
+        db.session.add(new_card)
+        db.session.commit()
+
+        print("Carte ajoutée :", new_card.masked_number())
+        return redirect('/manage_cards?success=1')
+
 
     return render_template('add_card.html', first_name=session['first_name'], last_name=session['last_name'])
 
@@ -312,11 +335,14 @@ def manage_cards():
     if 'username' not in session:
         return redirect('/')
 
+    success = request.args.get('success') == '1'
+    user = User.query.filter_by(username=session['username']).first()
     return render_template(
-        'manage_cards.html',
-        last_name=session.get('last_name', ''),
-        first_name=session.get('first_name', ''),
-        gender=session.get('gender', '')
+            'manage_cards.html',
+            last_name=user.last_name,
+            first_name=user.first_name,
+            gender=user.gender,
+            cards=user.cards
     )
 
 
@@ -336,6 +362,14 @@ embedder = FaceNet()
 
 # Pour stocker temporairement la dernière image capturée (base64 dans un vrai cas)
 temp_login_image = None
+@app.route('/reinitialisation_mdp', methods=['GET', 'POST'])
+def reinitialisation_mdp():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        # 🔐 Tu peux ici ajouter : vérification de l'email, envoi de lien, etc.
+        print(f"Demande de réinitialisation pour : {email}")
+        return redirect('/')
+    return render_template('reinitialisation_mdp.html')
 
 @app.route('/login-face-temp', methods=['POST', 'GET'])
 def login_face_temp():
@@ -418,7 +452,7 @@ def login_modal():
 
                 print("Similarité: ", similarity, flush=True)
 
-                if similarity > 0.6:
+                if similarity > 0.5:
                     match_count += 1
         except Exception as e:
             print("Erreur traitement image:", str(e), flush=True)
