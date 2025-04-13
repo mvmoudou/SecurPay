@@ -37,15 +37,21 @@
                         <p class="card-number">{{ card.masked_number() }}</p>
 
                         <div class="actions">
-                            <div class="action-btn">
+                            <div class="action-btn"  data-card-id="{{ card.id }}" onclick="toggleBlock(this)">
                                 <i class="bi bi-lock-fill"></i>
+                                <span>
+                                    {% if card.is_blocked %}Unblock{% else %}Block<br>temporarily{% endif %}
+                                </span>
                                 <span>Block<br>temporarily</span>
                             </div>
-                            <div class="action-btn">
+                            <div class="action-btn" data-card-id="{{ card.id }}" onclick="opposeCard(this)">
                                 <i class="bi bi-credit-card-2-back-fill"></i>
+                                <span>
+                                    {% if card.is_opposed %}Opposed{% else %}Oppose{% endif %}
+                                </span>
                                 <span>Oppose</span>
                             </div>
-                            <div class="action-btn">
+                            <div class="action-btn" data-card-id="{{ card.id }}" onclick="showPIN(this)">
                                 <i class="bi bi-eye-fill"></i>
                                 <span>See<br>secret code</span>
                             </div>
@@ -99,6 +105,41 @@
         const carousel = document.getElementById('card-carousel');
         const scrollAmount = 250;
         carousel.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+    }
+
+    function toggleBlock(elem) {
+        const cardId = elem.getAttribute('data-card-id');
+        fetch(`/toggle_block/${cardId}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    elem.querySelector("span").innerHTML = data.is_blocked ? "Unblock" : "Block<br>temporarily";
+                }
+            });
+    }
+
+    function opposeCard(elem) {
+        const cardId = elem.getAttribute('data-card-id');
+        fetch(`/oppose_card/${cardId}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    elem.querySelector("span").innerHTML = data.is_opposed ? "Opposed" : "Oppose";
+                }
+            });
+    }
+
+    function showPIN(elem) {
+        const cardId = elem.getAttribute('data-card-id');
+        fetch(`/card/${cardId}/get_pin`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.pin) {
+                    alert("Secret Code: " + data.pin);
+                } else {
+                    alert("Error: " + data.error);
+                }
+            });
     }
 </script>
 {% endblock %}

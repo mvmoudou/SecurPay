@@ -345,6 +345,35 @@ def manage_cards():
             cards=user.cards
     )
 
+#-------------Opérations pour la gestion des cartes-----------------#
+
+# Bloquer temporairement la carte 
+@app.route('/toggle_block/<int:card_id>', methods=['POST'])
+def toggle_block(card_id):
+    card = Card.query.get(card_id)
+    card.is_blocked = not card.is_blocked
+    db.session.commit()
+    return jsonify(status="success", is_blocked=card.is_blocked)
+
+# Faire opposition à la carte 
+@app.route('/oppose_card/<int:card_id>', methods=['POST'])
+def oppose_card(card_id):
+    card = Card.query.get(card_id)
+    card.is_opposed = not card.is_opposed
+    db.session.commit()
+    return jsonify(status="success", is_opposed=card.is_opposed)
+
+# Consulter le code pin 
+@app.route('/card/<int:card_id>/get_pin')
+def get_pin(card_id):
+    card = Card.query.get(card_id)
+    if card:
+        try:
+            return jsonify(pin=card.get_pin())
+        except Exception as e:
+            return jsonify(error="Erreur lors du déchiffrement du code PIN")
+    return jsonify(error="Carte non trouvée")
+
 
 #------------Connexion avec reconnaissance faciale---------------#
 from flask import request, jsonify, session

@@ -7,13 +7,13 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+
 }
 
 .container {
     max-width: 1200px;
-    margin-top: 100px;
-    margin-bottom: 5px;
+    margin-top: 25px;
+    margin-bottom: 25px;
     margin-left: 45px;
     margin-right: 5px;
     padding: 2rem;
@@ -123,7 +123,7 @@ body {
 }
 
 .temp-imagex-ykpv-p{
-    margin-left: 150px;
+    margin-left: 100px;
     width: 500px;
 }
 
@@ -139,30 +139,19 @@ body {
     position: absolute;
     width: 838px;
     height: 140px;
-    top: 331px;
+    top: 300px;
     left: 4px;
 }
 
 .temp-imagex-ykpv-p {
     position: absolute;
     width: 955px;
-    height: 806px;
+    height: 600px;
     top: 0;
-    left: 74px;
+    margin-right: 50px;
     object-fit: cover;
 }
 
-.p {
-    position: absolute;
-    width: 930px;
-    top: 579px;
-    left: 46px;
-    font-family: "Roboto-Light", Helvetica, sans-serif;
-    font-weight: 300;
-    color: #208a9d;
-    font-size: 36px;
-    line-height: normal;
-}
 
 /* Modals */
 .modal-overlay {
