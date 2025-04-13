@@ -17,62 +17,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     if (openLoginBtn) {
-        openLoginBtn.addEventListener("click", async (e) => {
+        openLoginBtn.addEventListener("click", (e) => {
             e.preventDefault();
-    
-            const overlay = document.getElementById("modal-overlay");
-            const modal = document.getElementById("login-modal");
-            const modalContent = document.getElementById("login-modal-content");
-    
-            if (!modalContent.innerHTML.trim()) {
-                const response = await fetch("/login-modal");
-                const html = await response.text();
-                modalContent.innerHTML = html;
-    
-                const closeBtn = modal.querySelector(".close-login-btn");
-                if (closeBtn) {
-                    closeBtn.addEventListener("click", () => {
-                        modal.style.display = "none";
-                        overlay.style.display = "none";
-                        document.body.style.overflow = "auto";
-                        stopLoginCamera();
-                    });
-                }
-    
-                const backBtn = modal.querySelector("#back-login");
-                if (backBtn) {
-                    backBtn.addEventListener("click", () => {
-                        modal.style.display = "none";
-                        overlay.style.display = "none";
-                        document.body.style.overflow = "auto";
-                        stopLoginCamera();
-                    });
-                }
-    
-                // ✅ Gérer le lien vers l'inscription (Sign up here)
-                const signupLink = modal.querySelector("#go-to-signup");
-                if (signupLink) {
-                    signupLink.addEventListener("click", (e) => {
-                        e.preventDefault();
-                        closeModal(); // ferme la modale de login
-                        loadModal(
-                            "/signup-modal",
-                            signupModal,
-                            signupContent,
-                            "/static/js/signup_modal.js",
-                            "setupBiometricsCapture",
-                            true
-                        );
-                    });
-                }
-    
-                if (typeof setupLoginWithCamera === "function") {
-                    setupLoginWithCamera();
-                }
-            }
-    
-            modal.style.display = "flex";
-            overlay.style.display = "block";
+            loadModal(
+                "/login-modal",
+                loginModal,
+                loginContent,
+                "/static/js/login_modal.js",
+                "setupLoginWithCamera",
+                true // ← cette ligne assure le chargement de face-api.js
+            );
         });
     }
     
@@ -217,68 +171,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const featuresLink = document.getElementById("open-login-from-features");
 
     if (featuresLink) {
-        featuresLink.addEventListener("click", async (e) => {
-            e.preventDefault();
+    featuresLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        loadModal(
+            "/login-modal",
+            loginModal,
+            loginContent,
+            "/static/js/login_modal.js",
+            "setupLoginWithCamera",
+            true // ← charge face-api.js automatiquement
+        );
+    });
+}
 
-            const overlay = document.getElementById("modal-overlay");
-            const modal = document.getElementById("login-modal");
-            const modalContent = document.getElementById("login-modal-content");
-
-            if (!modalContent.innerHTML.trim()) {
-                // Charger dynamiquement la modale via Flask
-                const response = await fetch("/login-modal");
-                const html = await response.text();
-                modalContent.innerHTML = html;
-
-                // Reconfigurer les événements après injection
-                const closeBtn = modal.querySelector(".close-login-btn");
-                if (closeBtn) {
-                    closeBtn.addEventListener("click", () => {
-                        modal.style.display = "none";
-                        overlay.style.display = "none";
-                        document.body.style.overflow = "auto";
-                        stopLoginCamera(); // arrêt de la caméra
-                    });
-                }
-                
-                const backBtn = modal.querySelector("#back-login");
-                if (backBtn) {
-                    backBtn.addEventListener("click", () => {
-                        modal.style.display = "none";
-                        overlay.style.display = "none";
-                        document.body.style.overflow = "auto";
-                        stopLoginCamera();
-                    });
-                }
-                
-                // 🔁 Ajoute ici le lien "Sign up here"
-                const signupLink = document.getElementById("go-to-signup");
-                if (signupLink) {
-                    signupLink.addEventListener("click", (e) => {
-                        e.preventDefault();
-                        closeModal(); // Ferme la modale login
-                        loadModal(
-                            "/signup-modal",
-                            signupModal,
-                            signupContent,
-                            "/static/js/signup_modal.js",
-                            "setupBiometricsCapture",
-                            true
-                        );
-                    });
-                                                       
-                }
-                
-                if (typeof setupLoginWithCamera === "function") {
-                    setupLoginWithCamera();
-                }
-                
-                // Afficher la modale login
-                modal.style.display = "flex";
-                overlay.style.display = "block";
-        }     
-            });
-    }
 });
 
 
