@@ -10,6 +10,24 @@ function setupLoginWithCamera() {
 
     if (!preview || !video || !status || !form) return;
 
+        // Re-lier le lien "Sign up here"
+    const signupLink = document.getElementById("go-to-signup");
+    if (signupLink) {
+        signupLink.addEventListener("click", (e) => {
+            e.preventDefault();
+            closeModal(); // ferme login
+            loadModal(
+                "/signup-modal",
+                document.getElementById("signup-modal"),
+                document.getElementById("signup-modal-content"),
+                "/static/js/signup_modal.js",
+                "setupBiometricsCapture",
+                true
+            );
+        });
+    }
+
+
     backBtn?.addEventListener("click", closeModal);
     closeBtn?.addEventListener("click", closeModal);
 
