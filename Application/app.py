@@ -178,7 +178,7 @@ def home2():
 def about():
     return render_template('about.html')
 
-<<<<<<< HEAD
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
@@ -205,8 +205,7 @@ def login():
         "message": "Connexion réussie !",
         "redirect": "/home2"
     }), 200
-=======
->>>>>>> c4c0ed79f958d1d8b6532637a8abc11c1bd719b7
+
 
 
 @app.route('/logout')
@@ -232,7 +231,7 @@ def register_face():
         filename = f"face_{file_count + 1:03}.png"
         file_path = os.path.join(save_dir, filename)
 
-<<<<<<< HEAD
+
         # ✅ Sinon, création du compte
         user = User(
             last_name=data['last_name'],
@@ -245,10 +244,10 @@ def register_face():
             password=generate_password_hash(data['password']),
             biometrics="SampleData"
         )
-=======
+
         with open(file_path, 'wb') as f:
             f.write(img_bytes)
->>>>>>> c4c0ed79f958d1d8b6532637a8abc11c1bd719b7
+
 
         return jsonify({'message': f"Image enregistrée sous {filename}"})
 
