@@ -179,7 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 loginContent,
                 "/static/js/login_modal.js",
                 "setupLoginWithCamera",
-                true // ← charge face-api.js automatiquement
+                true // charge face-api.js automatiquement
             );
         });
     }
