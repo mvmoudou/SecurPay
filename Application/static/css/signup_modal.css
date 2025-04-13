@@ -24,10 +24,82 @@
     border-radius: 8px;
     width: 100%;
     max-width: 700px;
+    height: 90%;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     gap: 1.5rem;
     font-family: 'Roboto', sans-serif;
 }
+
+.modal-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 95%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 30px; 
+    padding-bottom: -40px;
+    overflow-y: auto;
+    z-index: 9999;
+  }
+  
+  .modal-card {
+    background: white;
+    position: relative;
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 800px;
+    width: 90%;
+    height: 100%;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  /* Rendre la modale scrollable si elle déborde en hauteur */
+.modal-wrapper,
+.login-modal {
+    overflow-y: auto;
+    max-height: 100vh;
+}
+
+.modal-wrapper::-webkit-scrollbar,
+.login-modal::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-wrapper::-webkit-scrollbar-thumb,
+.login-modal::-webkit-scrollbar-thumb {
+    background-color: rgba(32, 138, 157, 0.6);
+    border-radius: 10px;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 9990;
+  }
+  
+  .close-signup-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #208A9D;
+    cursor: pointer;
+  }
+  
+  .close-signup-btn:hover {
+    transform: scale(1.2);
+    color: #12606e;
+  }
+  
 
 .form-section {
     flex: 1 1 400px;
@@ -76,7 +148,7 @@ form {
     color: #208A9D;
 }
 
-.form-group input {
+.form-group input:not([type="checkbox"]) {
     flex: 1;
     height: 30px;
     padding: 0 10px;
@@ -87,6 +159,7 @@ form {
     max-width: 400px;
     min-width: 150px;
 }
+
 
 .form-group input:focus {
     border: 2px solid #208A9D;
@@ -261,7 +334,7 @@ form {
     border-radius: 6px;
     background-color: #D9D9D9;
     height: 30px;
-    width: 68%;
+    width: 69%;
     padding: 0 10px;
 }
 
@@ -302,9 +375,69 @@ form {
     transition: transform 0.3s ease;
     pointer-events: none;
 }
+.arrow-icon {
+    transition: transform 0.3s ease;
+}
+
 
 .select-group.open .arrow-icon {
-    transform: rotate(90deg); /* flèche vers le bas */
+    transform: rotate(90deg);
+    transition: transform 0.3s ease;
+}
+
+
+
+/*Condition générale d'utilisation check et lien*/
+#form-group-cgu {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 14px;
+    color: #208A9D;
+}
+
+#form-group-cgu input[type="checkbox"] {
+    transform: scale(1.1);
+    accent-color: #208A9D;
+    cursor: pointer;
+}
+
+#form-group-cgu span {
+    color: #208A9D;
+    font-weight: bold;
+}
+
+#form-group-cgu a {
+    color: #208A9D;
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+#form-group-cgu a:hover {
+    color: #12606e;
+}
+
+/* Faux lien : bouton qui ressemble à un lien */
+#show-terms {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-left: 115px;
+    font-size: 14px;
+    color: #208A9D;
+    cursor: pointer;
+    font-family: 'Roboto', sans-serif;
+    width: 100px;
+    text-decoration: underline;
+}
+
+#show-terms:hover {
+    color: #126d7b;
+    text-decoration: underline;
+}
+
+#show-terms:focus {
+border: none;
 }
 
 
@@ -420,3 +553,31 @@ form {
 
 
 }
+
+.video-preview-right {
+    flex: 1 1 220px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    border-left: 2px dashed #208A9D;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    width: 100%;
+  }
+  
+  .video-preview-right video {
+    width: 100%;
+    height: 240px;
+    border-radius: 8px;
+    box-shadow: 0 0 8px rgba(32,138,157,0.4);
+  }
+  
+  .video-preview-right p {
+    margin-top: 0.5rem;
+    font-weight: bold;
+    color: #208A9D;
+    text-align: center;
+  }
+  

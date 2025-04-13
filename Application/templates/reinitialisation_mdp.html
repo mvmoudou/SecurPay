@@ -1,0 +1,29 @@
+<!-- templates/reinitialisation_mdp.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reset Password - PaySecurApp</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/reinitialisation_mdp.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="reset-container">
+    <div class="card">
+      <div class="left">
+        <img src="{{ url_for('static', filename='images/forgot-password-illustration.png') }}" alt="illustration">
+      </div>
+      <div class="right">
+        <img class="logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="logo">
+        <h1>Forgot <br>Your Password?</h1>
+        <form method="POST" action="{{ url_for('reinitialisation_mdp') }}">
+          <input type="email" name="email" placeholder="Email Address" required>
+          <button type="submit">RESET PASSWORD</button>
+        </form>
+        <a class="back-link" href="/">Back to sign in</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

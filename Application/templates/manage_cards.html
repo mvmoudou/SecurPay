@@ -1,6 +1,12 @@
 {% extends 'base.html' %}
 
 {% block content %}
+{% if success %}
+    <div class="alert-success" id="success-message">
+        Card added successfully!
+    </div>
+{% endif %}
+
 <div class="cards-container">
     <h2 class="cards-title">Manage your cards</h2>
 
@@ -12,31 +18,49 @@
     <div class="cards-content">
         <!-- Section gauche -->
         <div class="left-section">
-            <img src="{{ url_for('static', filename='images/card.png') }}" alt="Card" class="card-image">
-            <p class="card-owner">
-                {% if gender == 'Male' %}
-                    Mr {{ last_name }} {{ first_name }}
-                {% elif gender == 'Female' %}
-                    Mrs {{ last_name }} {{ first_name }}
-                {% else %}
-                    {{ last_name }} {{ first_name }}
-                {% endif %}
-            </p>
-            
+            <div class="carousel-wrapper">
+                <button class="carousel-btn left" onclick="scrollCarousel(-1)">&#8249;</button>
 
-            <div class="actions">
-                <div class="action-btn">
-                    <i class="bi bi-lock-fill"></i>
-                    <span>Block<br>temporarily</span>
+                <div class="card-carousel" id="card-carousel">
+                    {% for card in cards %}
+                    <div class="carousel-card">
+                        <img src="{{ url_for('static', filename='images/card.png') }}" alt="Card" class="card-image">
+                        <p class="card-owner">
+                            {% if gender == 'Male' %}
+                                Mr {{ last_name }} {{ first_name }}
+                            {% elif gender == 'Female' %}
+                                Mrs {{ last_name }} {{ first_name }}
+                            {% else %}
+                                {{ last_name }} {{ first_name }}
+                            {% endif %}
+                        </p>
+                        <p class="card-number">{{ card.masked_number() }}</p>
+
+                        <div class="actions">
+                            <div class="action-btn"  data-card-id="{{ card.id }}" onclick="toggleBlock(this)">
+                                <i class="bi bi-lock-fill"></i>
+                                <span>
+                                    {% if card.is_blocked %}Unblock{% else %}Block<br>temporarily{% endif %}
+                                </span>
+                                <span>Block<br>temporarily</span>
+                            </div>
+                            <div class="action-btn" data-card-id="{{ card.id }}" onclick="opposeCard(this)">
+                                <i class="bi bi-credit-card-2-back-fill"></i>
+                                <span>
+                                    {% if card.is_opposed %}Opposed{% else %}Oppose{% endif %}
+                                </span>
+                                <span>Oppose</span>
+                            </div>
+                            <div class="action-btn" data-card-id="{{ card.id }}" onclick="showPIN(this)">
+                                <i class="bi bi-eye-fill"></i>
+                                <span>See<br>secret code</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
-                <div class="action-btn">
-                    <i class="bi bi-credit-card-2-back-fill"></i>
-                    <span>Oppose</span>
-                </div>
-                <div class="action-btn">
-                    <i class="bi bi-eye-fill"></i>
-                    <span>See<br>secret code</span>
-                </div>
+
+                <button class="carousel-btn right" onclick="scrollCarousel(1)">&#8250;</button>
             </div>
         </div>
 
@@ -47,7 +71,7 @@
                 <div class="progress-bar">
                     <div class="progress" style="width: 0%"></div>
                 </div>
-                <p>0% used &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 400€</p>
+                <p>0% used&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 400€</p>
             </div>
 
             <div class="limit">
@@ -55,11 +79,67 @@
                 <div class="progress-bar">
                     <div class="progress" style="width: 0%"></div>
                 </div>
-                <p>0% used&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1000€</p>
+                <p>0% used&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1000€</p>
             </div>
 
             <button class="modify-btn">Modify your limit</button>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        const message = document.getElementById('success-message');
+        if (message) {
+            setTimeout(() => {
+                message.style.transition = 'opacity 0.5s ease';
+                message.style.opacity = '0';
+                setTimeout(() => message.remove(), 500);
+            }, 5000);
+        }
+    });
+
+    function scrollCarousel(direction) {
+        const carousel = document.getElementById('card-carousel');
+        const scrollAmount = 250;
+        carousel.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+    }
+
+    function toggleBlock(elem) {
+        const cardId = elem.getAttribute('data-card-id');
+        fetch(`/toggle_block/${cardId}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    elem.querySelector("span").innerHTML = data.is_blocked ? "Unblock" : "Block<br>temporarily";
+                }
+            });
+    }
+
+    function opposeCard(elem) {
+        const cardId = elem.getAttribute('data-card-id');
+        fetch(`/oppose_card/${cardId}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    elem.querySelector("span").innerHTML = data.is_opposed ? "Opposed" : "Oppose";
+                }
+            });
+    }
+
+    function showPIN(elem) {
+        const cardId = elem.getAttribute('data-card-id');
+        fetch(`/card/${cardId}/get_pin`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.pin) {
+                    alert("Secret Code: " + data.pin);
+                } else {
+                    alert("Error: " + data.error);
+                }
+            });
+    }
+</script>
 {% endblock %}

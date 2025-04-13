@@ -4,27 +4,49 @@ from flask_sqlalchemy import SQLAlchemy
 import os, shutil, base64, pickle
 import numpy as np
 import cv2
+import json
 from mtcnn import MTCNN
 from keras_facenet import FaceNet
+from datetime import timedelta # Pour étendre la session de la session de l'utilisateur une fois qu'il 
+from models import db, User, Card
+
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.permanent_session_lifetime = timedelta(minutes=20)
 
-db = SQLAlchemy(app)
+db.init_app(app)
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    last_name = db.Column(db.String(100))
-    first_name = db.Column(db.String(100))
-    gender = db.Column(db.String(1))
-    birthday = db.Column(db.String(20))
-    email = db.Column(db.String(120), unique=True)
-    phone = db.Column(db.String(20))
-    username = db.Column(db.String(100), unique=True)
-    password = db.Column(db.String(100))
-    biometrics = db.Column(db.Text)
+
+
+
+@app.route('/historique')
+def historique():
+    if 'username' not in session:
+        return redirect('/')
+
+    user = User.query.filter_by(username=session['username']).first()
+    
+    # Exemple de récupération du solde depuis ta base (si tu l'as)
+    # Ici on suppose un champ user.balance ou alors tu le calcules
+    balance = getattr(user, 'balance', 3000)
+
+    transactions = [
+        {"details": "Investment", "id": "#00053", "date": "02 Jan 2025 04:56 PM", "amount": "-45.00"},
+        {"details": "Online shopping", "id": "#00736", "date": "13 April 2024 09:33 AM", "amount": "-50.02"},
+        {"details": "Food", "id": "#00221", "date": "25 December 2024 03:16 PM", "amount": "-14.85"},
+    ]
+    overdraft = 500  # Exemple fixe
+    return render_template("historique.html",
+                            first_name=user.first_name,
+                            last_name=user.last_name,
+                            user_id=user.id,
+                            balance=balance,
+                            overdraft=overdraft,
+                            transactions=transactions)
+
 
 @app.route('/signup-modal', methods=['GET', 'POST'])
 def signup_modal():
@@ -43,6 +65,13 @@ def signup_modal():
     if User.query.filter_by(email=data['email']).first():
         cleanup_failed_registration()
         return jsonify({"message": "Cet email est déjà utilisé."}), 400
+
+
+    # Vérifie si l'utilisateur a accepté les conditions générales d'utilisation
+    if data.get('terms_accepted') != "yes":
+        cleanup_failed_registration()
+        return jsonify({"message": "Veuillez accepter les conditions d'utilisation."}), 400
+
 
     if User.query.filter_by(username=data['username']).first():
         cleanup_failed_registration()
@@ -94,7 +123,7 @@ def process_faces():
         update_embeddings(username, embeddings)
 
         # ✅ Ne supprime pas user_temp ici
-        return jsonify({"message": "Traitement terminé", "redirect": "/home2"})
+        return jsonify({"message": "Traitement terminé", "redirect": "/login-modal"})
 
     except Exception as e:
         print("Erreur traitement des visages:", e)
@@ -111,7 +140,6 @@ def process_faces():
 
         return jsonify({"message": "Erreur serveur"}), 500
 
-
 def process_faces_internal():
     folder = os.path.join('static', 'faces', 'user_temp')
     embeddings = []
@@ -121,20 +149,31 @@ def process_faces_internal():
     for filename in os.listdir(folder):
         if filename.endswith('.png'):
             path = os.path.join(folder, filename)
-            img = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
-            results = detector.detect_faces(img)
-            if results and results[0]['confidence'] > 0.90:
-                x, y, w, h = results[0]['box']
-                x, y = max(x, 0), max(y, 0)
-                face = img[y:y+h, x:x+w]
-                face_resized = cv2.resize(face, (160, 160))
-                face_array = np.asarray(face_resized)
-
-                # ✅ CORRECT ici : on accède directement à l’indice [0]
-                embedding = embedder.embeddings([face_array])[0]
-                embeddings.append(embedding)
+            img = cv2.imread(path)
+            emb = extract_embedding_from_image(img, detector, embedder)
+            if emb is not None:
+                embeddings.append(emb)
 
     return embeddings
+
+
+# Fonction pour l'extraction des embeddings qu'on pourra utiliser aussi pour les différente reconnaissance faciale
+def extract_embedding_from_image(img, detector, embedder):
+    try:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        results = detector.detect_faces(img)
+        if results and results[0]['confidence'] > 0.90:
+            x, y, w, h = results[0]['box']
+            x, y = max(x, 0), max(y, 0)
+            face = img[y:y+h, x:x+w]
+            face = cv2.resize(face, (160, 160))
+            face_array = np.asarray(face)
+            embedding = embedder.embeddings([face_array])[0]
+            return embedding
+    except Exception as e:
+        print("Erreur embedding:", e)
+    return None
+
 
 def update_embeddings(username, new_embeddings, path='embeddings.pkl'):
     data = {}
@@ -145,38 +184,44 @@ def update_embeddings(username, new_embeddings, path='embeddings.pkl'):
             if isinstance(loaded, dict):
                 data = loaded
             else:
-                print("⚠️ embeddings.pkl contient un format inattendu. Réinitialisation.")
+                print(" embeddings.pkl contient un format inattendu. Réinitialisation.")
     
     data[username] = new_embeddings
 
     with open(path, 'wb') as f:
         pickle.dump(data, f)
 
+# Pour les conditions générales d'utilisation
+@app.route('/terms')
+def terms():
+    from_page = request.args.get("from", "")
+    return render_template('terms.html', from_page=from_page)
 
-class Card(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    expiration = db.Column(db.String(7))
-    cvv = db.Column(db.String(4))
-    holder_name = db.Column(db.String(100))
-    billing_address = db.Column(db.String(200))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    user = db.relationship('User', backref=db.backref('cards', lazy=True))
 
 # -------------------- ROUTES -------------------- #
 @app.route('/')
 def home():
-    return render_template('home.html')
+    if 'username' not in session:
+        return render_template('home.html')
+    return render_template('home2.html', username=session['username'], first_name=session['first_name'],
+                            gender=session.get('gender', '')) 
+        
+       
+
 
 @app.route('/home2')
 def home2():
     if 'username' not in session:
         return redirect('/')
-    return render_template('home2.html', username=session['username'], first_name=session['first_name'])
+    return render_template('home2.html', username=session['username'], first_name=session['first_name'], show_auth_modals=False)
 
 @app.route('/about')
 def about():
+    if 'username' not in session:
+        return redirect('/')
     return render_template('about.html')
+
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -208,6 +253,7 @@ def login():
 
 
 
+
 @app.route('/logout')
 def logout():
     return render_template('home.html')
@@ -232,6 +278,7 @@ def register_face():
         file_path = os.path.join(save_dir, filename)
 
 
+
         # ✅ Sinon, création du compte
         user = User(
             last_name=data['last_name'],
@@ -244,6 +291,10 @@ def register_face():
             password=generate_password_hash(data['password']),
             biometrics="SampleData"
         )
+
+        with open(file_path, 'wb') as f:
+            f.write(img_bytes)
+
 
         with open(file_path, 'wb') as f:
             f.write(img_bytes)
@@ -298,14 +349,33 @@ def add_card():
     if 'username' not in session:
         return redirect('/')
 
+    user = User.query.filter_by(username=session['username']).first()
+    if not user:
+        return redirect('/')
+
     if request.method == 'POST':
+        card_number = request.form['card_number']  # 🆕
         expiration = request.form['expiration']
         cvv = request.form['cvv']
         holder_name = request.form['holder_name']
         billing_address = request.form['billing_address']
 
-        print("Carte ajoutée :", expiration, cvv, holder_name, billing_address)
-        return redirect('/manage_cards')
+        # Création de la carte avec chiffrement auto du numéro
+        new_card = Card(
+            card_number=card_number,
+            expiration=expiration,
+            cvv=cvv,
+            holder_name=holder_name,
+            billing_address=billing_address,
+            user=user
+        )
+
+        db.session.add(new_card)
+        db.session.commit()
+
+        print("Carte ajoutée :", new_card.masked_number())
+        return redirect('/manage_cards?success=1')
+
 
     return render_template('add_card.html', first_name=session['first_name'], last_name=session['last_name'])
 
@@ -314,12 +384,44 @@ def manage_cards():
     if 'username' not in session:
         return redirect('/')
 
+    success = request.args.get('success') == '1'
+    user = User.query.filter_by(username=session['username']).first()
     return render_template(
-        'manage_cards.html',
-        last_name=session.get('last_name', ''),
-        first_name=session.get('first_name', ''),
-        gender=session.get('gender', '')
+            'manage_cards.html',
+            last_name=user.last_name,
+            first_name=user.first_name,
+            gender=user.gender,
+            cards=user.cards
     )
+
+#-------------Opérations pour la gestion des cartes-----------------#
+
+# Bloquer temporairement la carte 
+@app.route('/toggle_block/<int:card_id>', methods=['POST'])
+def toggle_block(card_id):
+    card = Card.query.get(card_id)
+    card.is_blocked = not card.is_blocked
+    db.session.commit()
+    return jsonify(status="success", is_blocked=card.is_blocked)
+
+# Faire opposition à la carte 
+@app.route('/oppose_card/<int:card_id>', methods=['POST'])
+def oppose_card(card_id):
+    card = Card.query.get(card_id)
+    card.is_opposed = not card.is_opposed
+    db.session.commit()
+    return jsonify(status="success", is_opposed=card.is_opposed)
+
+# Consulter le code pin 
+@app.route('/card/<int:card_id>/get_pin')
+def get_pin(card_id):
+    card = Card.query.get(card_id)
+    if card:
+        try:
+            return jsonify(pin=card.get_pin())
+        except Exception as e:
+            return jsonify(error="Erreur lors du déchiffrement du code PIN")
+    return jsonify(error="Carte non trouvée")
 
 
 #------------Connexion avec reconnaissance faciale---------------#
@@ -338,6 +440,14 @@ embedder = FaceNet()
 
 # Pour stocker temporairement la dernière image capturée (base64 dans un vrai cas)
 temp_login_image = None
+@app.route('/reinitialisation_mdp', methods=['GET', 'POST'])
+def reinitialisation_mdp():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        # 🔐 Tu peux ici ajouter : vérification de l'email, envoi de lien, etc.
+        print(f"Demande de réinitialisation pour : {email}")
+        return redirect('/')
+    return render_template('reinitialisation_mdp.html')
 
 @app.route('/login-face-temp', methods=['POST', 'GET'])
 def login_face_temp():
@@ -346,31 +456,48 @@ def login_face_temp():
     temp_login_image = data.get('image')
     return jsonify({'message': 'Image reçue'}), 200
 
-
-@app.route('/login-modal', methods=['POST'])
+@app.route('/login-modal', methods=['GET', 'POST'])
 def login_modal():
     global temp_login_image_list
 
-    username = request.form.get('username')
-    password = request.form.get('password')
+    if request.method == 'GET':
+        return render_template('login_modal.html')
+
+    # Méthode POST avec JSON
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
+        images = data.get('images', [])
+    except Exception as e:
+        return jsonify({'message': "Requête invalide."}), 400
+
+    if not username or not password:
+        return jsonify({'message': "Identifiants manquants."}), 400
 
     user = User.query.filter_by(username=username, password=password).first()
     if not user:
         return jsonify({'message': "Nom d'utilisateur ou mot de passe invalide."}), 400
 
-    # Récupérer les images en base64
-    images = request.json.get('images', [])
     if not images or len(images) == 0:
         return jsonify({'message': "Aucune image reçue pour vérification."}), 400
 
-    # Charger les embeddings
-    with open("embeddings.pkl", "rb") as f:
-        db_embeddings = pickle.load(f)
+    # Chargement des embeddings
+    try:
+        with open("embeddings.pkl", "rb") as f:
+            db_embeddings = pickle.load(f)
+    except Exception as e:
+        return jsonify({'message': "Erreur de chargement des données biométriques."}), 500
 
     if username not in db_embeddings:
         return jsonify({'message': "Aucune donnée biométrique enregistrée pour cet utilisateur."}), 400
 
     stored_embedding = db_embeddings[username]
+
+    # Si c'est une liste (plusieurs embeddings stockés), on fait la moyenne
+    if isinstance(stored_embedding, list) or isinstance(stored_embedding, np.ndarray) and len(np.array(stored_embedding).shape) == 2:
+        stored_embedding = np.mean(np.array(stored_embedding), axis=0)
+
     match_count = 0
 
     for image_data in images:
@@ -387,18 +514,34 @@ def login_modal():
                 x, y = max(x, 0), max(y, 0)
                 face = img[y:y+h, x:x+w]
                 face = cv2.resize(face, (160, 160))
-                new_embedding = embedder.embeddings([face])[0]
+                new_embedding = extract_embedding_from_image(img, detector, embedder)
+                if new_embedding is None:
+                    continue
+
+                stored_embedding = stored_embedding.flatten()
+                new_embedding = new_embedding.flatten()
                 similarity = cosine_similarity([new_embedding], [stored_embedding])[0][0]
 
-                if similarity > 0.7:
+
+                print("✅ Similarité:", similarity, flush=True)
+
+                print("Forme new_embedding:", new_embedding.shape, flush=True)
+                print("Forme stored_embedding:", stored_embedding.shape, flush=True)
+
+                print("Similarité: ", similarity, flush=True)
+
+                if similarity > 0.5:
                     match_count += 1
         except Exception as e:
-            continue  # On ignore les erreurs pour les images ratées
+            print("Erreur traitement image:", str(e), flush=True)
+            continue
+
 
     if match_count >= 6:
         session['username'] = user.username
         session['first_name'] = user.first_name
         session['last_name'] = user.last_name
+        session.permanent = True  # On active la session une fois que l'utilisateur se connecte
         return jsonify({'message': "Connexion réussie !", 'redirect': '/home2'})
     else:
         return jsonify({'message': "Reconnaissance faciale échouée. Veuillez réessayer."}), 401

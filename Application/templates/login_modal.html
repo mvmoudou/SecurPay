@@ -1,21 +1,58 @@
 <!-- login_modal.html -->
-<div class="login-modal">
-    <div class="login-content">
-      <span class="close-login-btn">&times;</span>
-  
-      <h2>Login</h2>
+<div class="login-modal" id="login-modal">
+  <div class="login-box">
+    <div class="login-left">
+      <h2>Login on PaySecurApp Or Sign Up</h2>
       <form id="login-form" method="POST">
-        <input type="text" name="username" placeholder="Nom d'utilisateur" required>
-        <input type="password" name="password" placeholder="Mot de passe" required>
-        <button type="submit">Se connecter</button>
+
+        <!-- Champ username -->
+        <div class="input-group">
+          <i class="bi bi-person-fill"></i>
+          <input type="text" name="username" id="login-username" placeholder="User name" required>
+        </div>
+
+        <!-- Champ email -->
+        <div class="input-group">
+          <i class="bi bi-envelope-fill"></i>
+          <input type="email" name="email" id="login-email" placeholder="Email" required>
+        </div>
+
+        <!-- Champ mot de passe -->
+        <div class="input-group">
+          <i class="bi bi-lock-fill"></i>
+          <input type="password" name="password" id="login-password" placeholder="***" required>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+          <a href="#" class="forgot-password">Forget password?</a>
+          <button type="submit" class="login-btn">Login</button>
+        </div>
       </form>
-  
-      <div id="camera-preview-login" class="video-container" style="display: none;">
-        <video id="video-login" autoplay muted></video>
-        <p id="login-capture-status">Préparation de la caméra...</p>
-      </div>
-  
-      <button id="back-login" class="back-btn">Retour</button>
+
+      <p class="signup-msg">
+        You don’t have an account? <a href="#" id="go-to-signup">SignUp here</a>
+      </p>
+    </div>
+
+    <div class="login-right">
+      <img src="{{ url_for('static', filename='images/illustration-login.png') }}" alt="Login illustration">
+    </div>
+
+    <span class="close-login-btn">&times;</span>
+  </div>
+
+  <!-- Caméra -->
+  <div id="camera-preview-login" class="video-container" style="display: none;">
+    <video id="video-login" autoplay muted></video>
+    <p id="login-capture-status">Préparation de la caméra...</p>
+  </div>
+
+  <!-- Vérification -->
+  <div id="face-verification-popup" class="verification-popup">
+    <div class="verification-content">
+      <div class="spinner"></div>
+      <p>Vérification biométrique en cours...</p>
     </div>
   </div>
-  
+</div>
