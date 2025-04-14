@@ -258,7 +258,7 @@ form {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.2); /* assombrit le fond */
-    z-index: 9998;
+    z-index: 10001;
 }
 
 .popup {
@@ -270,7 +270,7 @@ form {
     padding: 1rem 1.5rem;
     border-radius: 10px;
     box-shadow: 0 6px 15px rgba(0,0,0,0.25);
-    z-index: 9999;
+    z-index: 10002;
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -321,6 +321,41 @@ form {
     background-color: #dc3545;
     color: white;
 }
+
+.popup-buttons {
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+    gap: 10px;
+}
+
+.popup-buttons button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
+}
+
+.popup-confirm {
+    background-color: #208A9D;
+    color: white;
+}
+
+.popup-cancel {
+    background-color: #ccc;
+    color: #333;
+}
+
+.popup-confirm:hover {
+    background-color: #186b7a;
+}
+
+.popup-cancel:hover {
+    background-color: #aaa;
+}
+
 
 .select-wrapper {
     position: relative;
@@ -580,4 +615,7 @@ border: none;
     color: #208A9D;
     text-align: center;
   }
+
+ 
+
   

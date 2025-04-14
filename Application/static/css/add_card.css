@@ -8,6 +8,8 @@
     font-size: 1.4rem;
     margin-bottom: 2rem;
     color: #555;
+    margin-left: -100px;
+    margin-top: -30px;
 }
 
 .add-card-content {
@@ -15,7 +17,7 @@
     justify-content: space-between;
     gap: 3rem;
     align-items: flex-start;
-    margin-top: -5px;
+    margin-top: -30px;
 }
 
 .left-panel {
@@ -24,9 +26,10 @@
 }
 
 .card-img {
-    width: 200px;
+    width: 500px;
     height: auto;
     margin-bottom: 1rem;
+    margin-top: 50px;
 }
 
 .card-actions {

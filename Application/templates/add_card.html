@@ -7,10 +7,6 @@
     <div class="add-card-content">
         <div class="left-panel">
             <img src="{{ url_for('static', filename='images/card.png') }}" alt="Card Image" class="card-img">
-            <div class="card-actions">
-                <a href="#" class="link-primary">Confirm your credit card</a>
-                <a href="#" class="link-danger">Remove card</a>
-            </div>
         </div>
 
         <form class="right-panel" action="/add_card" method="POST">
@@ -23,6 +19,9 @@
 
             <label for="cvv">CVV</label>
             <input type="text" id="cvv" name="cvv" placeholder="Required" maxlength="4" pattern="\d{3,4}" required>
+            
+            <label for="pin">Card PIN</label> 
+            <input type="password" id="pin" name="pin" placeholder="Choose a secret PIN" maxlength="6" minlength="4" required>
 
 
             <label for="holder">Cardholder’s name</label>

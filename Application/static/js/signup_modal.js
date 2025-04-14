@@ -45,8 +45,23 @@ async function setupBiometricsCapture() {
     // 🎥 Lancement capture biométrique
     biometricsBtn.addEventListener("click", async () => {
         preview.style.display = "flex";
+
+        // ✅ Bloque la fermeture + avertit le backend
+        window.onbeforeunload = (e) => {
+            e.preventDefault();
+            e.returnValue = "";
+
+            // ✅ Préviens le backend en cas de fermeture/rechargement
+            navigator.sendBeacon("/cancel-registration");
+        };
+
+        // ✅ Marque qu’une inscription est en cours (utile pour d'autres vérifs JS)
+        sessionStorage.setItem("registration_in_progress", "true");
+
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = stream;
+
+        
 
         const canvas = document.createElement("canvas");
         canvas.width = 320;
@@ -88,6 +103,10 @@ async function setupBiometricsCapture() {
                     stream.getTracks().forEach(t => t.stop());
                     preview.style.display = "none";
                     biometricDone = true;
+                        // ✅ Débloque la page
+                    window.onbeforeunload = null;
+                    sessionStorage.removeItem("registration_in_progress");
+
                     showPopup("Captures terminées avec succès !", "success");
                 }
             } else {
@@ -152,13 +171,26 @@ async function setupBiometricsCapture() {
                 return;
             }
     
+            // Bloque le rechargement ou la fermeture pendant la capture
+            window.onbeforeunload = (e) => {
+                e.preventDefault();
+                e.returnValue = ""; // Obligatoire pour certains navigateurs
+            };
+
             // Succès : popup success + redirection ou traitement biométrique
             loadingPopup = showPopup("Inscription réussie, traitement des données biométriques en cours...", "loading");
     
+         
+
             const biometricRes = await fetch("/process-faces");
             const biometricResult = await biometricRes.json();
+
+          
+
     
             if (!biometricRes.ok) {
+                    // ✅ Débloque la page
+                window.onbeforeunload = null;
                 closeAllPopups();
                 showPopup("Erreur lors du traitement des visages", "error");
                 return;
@@ -168,8 +200,6 @@ async function setupBiometricsCapture() {
             closeAllPopups();
             let finalMessage = "Traitement terminé !";
             let openLoginModalAfter = false;
-            
-
 
             
             if (biometricResult.redirect === "/home2") {
@@ -185,15 +215,27 @@ async function setupBiometricsCapture() {
             loadingPopup.querySelector(".icon i").className = "bi bi-check-circle-fill";
             
             setTimeout(() => {
+                window.onbeforeunload = null; // Débloque la fermeture
+                sessionStorage.removeItem("registration_in_progress");
+
                 closeAllPopups();
-                if (openLoginModalAfter) {
-                    const openLoginBtn = document.getElementById("open-login");
-                    if (openLoginBtn) openLoginBtn.click(); // simule clic pour ouvrir modale
-                } else if (biometricResult.redirect) {
-                    window.location.href = biometricResult.redirect;
-                }
-            }, 3000);
             
+                showPopup("Traitement terminé, veuillez vous connecter pour finaliser.", "success");
+            
+                setTimeout(() => {
+                    const signupModal = document.getElementById("signup-modal");
+                    const signupContent = document.getElementById("signup-modal-content");
+                    const modalOverlay = document.getElementById("modal-overlay");
+            
+                    if (signupModal) signupModal.style.display = "none";
+                    if (signupContent) signupContent.innerHTML = "";
+                    if (modalOverlay) modalOverlay.style.display = "none";
+            
+                    const openLoginBtn = document.getElementById("open-login");
+                    if (openLoginBtn) openLoginBtn.click();
+                }, 2000);
+            }, 3000);
+                        
 
     
         } catch (error) {
@@ -274,6 +316,7 @@ function showPopup(message, type = "success", options = {}) {
             overlay.remove();
         }, 5000);
     }
+    
 
     // Retourner le popup afin d'utiliser la fonction dans une variable 
     return popup;
@@ -396,9 +439,6 @@ function stopSignupCamera() {
 
 // Pour qu'elle soit accessible depuis home.js
 window.initGenderSelect = initGenderSelect;
-
-
-
 
 
 
