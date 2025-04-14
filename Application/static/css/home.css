@@ -7,7 +7,6 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-
 }
 
 .container {
@@ -63,46 +62,21 @@ body {
     width: 32px;
 }
 
-.welcome-section {
-    text-align: center;
-    padding: 3rem 1rem;
-    position: relative;
-}
 
-.app-name {
-    font-size: 4rem;
-    font-weight: 800;
-    color: #208A9D;
-    text-shadow: 2px 2px #9ae6f0;
-    margin-top: 1rem;
-    background-color: rgba(144, 238, 144, 0.4);
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-}
-
-.slogan {
-    font-size: 1.1rem;
-    max-width: 600px;
-    margin-top: 20px;
-    margin-left: auto;
-    margin-right: auto;
-    color: #208A9D;
-}
 /* Les images */
 .overlap-2 {
     position: relative;
     width: 1029px;
-    height: 806px;
+    height: 500px;
     margin: 0 auto;
 }
 
 .img {
-    position: absolute;
+    position: relative;
     width: 737px;
     height: 84px;
     top: 389px;
-    left: 34px;
+   
 }
 
 .rectangle-2 {
@@ -123,8 +97,9 @@ body {
 }
 
 .temp-imagex-ykpv-p{
-    margin-left: 100px;
-    width: 500px;
+    margin-left: -700px;
+    width: 400px;
+    margin-bottom: -100px;
 }
 
 .line {

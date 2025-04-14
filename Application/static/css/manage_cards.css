@@ -502,3 +502,33 @@
 .action-btn:hover {
     transform: scale(1.1);
 }
+
+.no-cards-message {
+    padding: 40px;
+    text-align: center;
+    background-color: #f4f4f4;
+    border-radius: 16px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    margin: auto;
+    max-width: 450px;
+}
+
+.no-cards-message p {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+.add-card-button {
+    display: inline-block;
+    background-color: #208A9D;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.add-card-button:hover {
+    background-color: #186b7c;
+}

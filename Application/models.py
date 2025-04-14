@@ -36,17 +36,18 @@ class User(db.Model):
         return f'<User {self.username}>'
 
 
-# --- Modèle Carte Bancaire avec chiffrement du numéro ---
+# --- Modèle Carte Bancaire avec chiffrement du numéro et du CVV ---
 class Card(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-
     _card_number = db.Column("card_number", db.LargeBinary, nullable=False)  # Champ chiffré
     expiration = db.Column(db.String(7), nullable=False)
-    cvv = db.Column(db.String(4), nullable=False)
+    _cvv = db.Column("cvv", db.LargeBinary, nullable=False)  # Champ chiffré
     holder_name = db.Column(db.String(100), nullable=False)
     billing_address = db.Column(db.String(200), nullable=False)
-
+    is_blocked = db.Column(db.Boolean, default=False)
+    is_opposed = db.Column(db.Boolean, default=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    pin_encrypted = db.Column(db.LargeBinary, nullable=False)
 
     @property
     def card_number(self):
@@ -59,10 +60,26 @@ class Card(db.Model):
     def card_number(self, plain_number):
         self._card_number = fernet.encrypt(plain_number.encode())
 
+    @property
+    def cvv(self):
+        try:
+            return fernet.decrypt(self._cvv).decode()
+        except Exception:
+            return "[Erreur de déchiffrement]"
+
+    @cvv.setter
+    def cvv(self, plain_cvv):
+        self._cvv = fernet.encrypt(plain_cvv.encode())
+
     def masked_number(self):
-        """Retourne le numéro de carte masqué, ex : **** **** **** 1234"""
         number = self.card_number
         return "**** **** **** " + number[-4:] if number else "Numéro non dispo"
 
     def __repr__(self):
         return f"<Card {self.masked_number()} pour {self.user.username}>"
+
+    def set_pin(self, pin_plaintext):
+        self.pin_encrypted = fernet.encrypt(pin_plaintext.encode())
+
+    def get_pin(self):
+        return fernet.decrypt(self.pin_encrypted).decode()
