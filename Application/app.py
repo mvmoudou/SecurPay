@@ -71,6 +71,7 @@ def signup_modal():
         return jsonify({"message": "Veuillez accepter les conditions d'utilisation."}), 400
 
     try:
+        # Dans signup_modal, modifiez la création de l'utilisateur :
         user = User(
             last_name=data['last_name'],
             first_name=data['first_name'],
@@ -79,7 +80,7 @@ def signup_modal():
             email=data['email'],
             phone=data['phone'],
             username=data['username'],
-            password=data['password'],
+            password=generate_password_hash(data['password']),  # Hasher le mot de passe
             biometrics="en traitement..."
         )
 
@@ -255,7 +256,7 @@ def about():
 @app.route('/settings')
 def settings():
     if 'username' not in session:
-        return redirect('/')
+        return redirect('/login-modal')
     return render_template('settings.html')
 
 @app.route('/login', methods=['GET', 'POST'])
