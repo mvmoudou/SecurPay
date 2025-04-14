@@ -223,6 +223,11 @@ def about():
     return render_template('about.html')
 
 
+@app.route('/settings')
+def settings():
+    if 'username' not in session:
+        return redirect('/')
+    return render_template('settings.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

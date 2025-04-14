@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Settings - PaySecurApp</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}" />
+</head>
+<body>
+    <div class="scurit-et-paiements">
+        <div class="div">
+            <div class="overlap-group">
+                <!-- Menu de navigation -->
+                <div class="overlap">
+                    <div class="text-wrapper-7">Home</div>
+                    <div class="text-wrapper-8">Features</div>
+                    <div class="text-wrapper-9">Settings</div>
+                    <div class="text-wrapper-10">Team</div>
+                    <div class="text-wrapper-11">Log Out</div>
+                    <div class="text-wrapper-12">{{ session.get('username', 'User name') }}</div>
+                    <div class="ellipse">
+                        <img class="material-symbols" src="{{ url_for('static', filename='img/material-symbols-person-rounded.svg') }}" />
+                    </div>
+                </div>
+
+                <!-- Logo et titre -->
+                <div class="text-wrapper-13">PaySecurApp</div>
+                <img class="logo" src="{{ url_for('static', filename='img/logo-1.png') }}" />
+
+                <!-- Options de paramètres -->
+                <div class="settings-options">
+                    <div class="setting-item">
+                        <img class="ix-user-profile" src="{{ url_for('static', filename='img/ix-user-profile-filled.svg') }}" />
+                        <div class="text-wrapper">Profile</div>
+                    </div>
+
+                    <div class="setting-item">
+                        <img class="vector" src="{{ url_for('static', filename='img/vector.svg') }}" />
+                        <div class="text-wrapper-2">Security</div>
+                    </div>
+
+                    <div class="setting-item">
+                        <img class="clarity-color" src="{{ url_for('static', filename='img/clarity-color-palette-solid.svg') }}" />
+                        <div class="text-wrapper-3">Display</div>
+                    </div>
+
+                    <div class="setting-item">
+                        <img class="capture-dcran-du" src="{{ url_for('static', filename='img/capture-d-cran-du-2025-03-21-00-25-37.png') }}" />
+                        <div class="text-wrapper-4">Languages</div>
+                    </div>
+
+                    <div class="setting-item">
+                        <img class="capture-dcran-du-2" src="{{ url_for('static', filename='img/capture-d-cran-du-2025-03-21-00-22-36.png') }}" />
+                        <div class="text-wrapper-5">Services</div>
+                    </div>
+
+                    <div class="setting-item">
+                        <img class="capture-dcran-du-3" src="{{ url_for('static', filename='img/capture-d-cran-du-2025-03-21-00-29-28.png') }}" />
+                        <div class="text-wrapper-6">Permissions</div>
+                    </div>
+                </div>
+
+                <!-- Bouton Save -->
+                <div class="text-wrapper-14">Save</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
