@@ -17,9 +17,18 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.permanent_session_lifetime = timedelta(minutes=20)
 
-db.init_app(app)
+#db.init_app(app)
 
+def init_db():
+    with app.app_context():
+        # Crée toutes les tables
+        db.create_all()
+        print("Base de données créée avec succès!")
 
+# Si ce fichier est exécuté directement
+if __name__ == '__main__':
+    init_db()  # Initialise la base de données
+    app.run(debug=True)
 
 
 @app.route('/historique')
@@ -286,54 +295,7 @@ def login():
         "redirect": "/home2"
     }), 200
 
-@app.route('/login-face', methods=['POST'])
-def login_face():
-    try:
-        data = request.get_json()
-        image_data = data.get('image')
-        
-        if not image_data:
-            return jsonify({"message": "Aucune image reçue"}), 400
-            
-        # Convertir l'image base64 en array numpy
-        image_data = image_data.split(',')[1]
-        image_bytes = base64.b64decode(image_data)
-        nparr = np.frombuffer(image_bytes, np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        
-        # Extraire l'embedding
-        detector = MTCNN()
-        embedder = FaceNet()
-        embedding = extract_embedding_from_image(img, detector, embedder)
-        
-        if embedding is None:
-            return jsonify({"message": "Aucun visage détecté"}), 400
-            
-        # Charger tous les embeddings
-        with open('embeddings.pkl', 'rb') as f:
-            stored_embeddings = pickle.load(f)
-            
-        # Comparer avec tous les embeddings stockés
-        for username, stored_embs in stored_embeddings.items():
-            for stored_emb in stored_embs:
-                similarity = np.dot(embedding, stored_emb)
-                if similarity > 0.85:  # Seuil de similarité
-                    user = User.query.filter_by(username=username).first()
-                    if user:
-                        session['username'] = user.username
-                        session['first_name'] = user.first_name
-                        session['last_name'] = user.last_name
-                        session.permanent = True
-                        return jsonify({
-                            "message": "Connexion réussie !",
-                            "redirect": "/home2"
-                        })
-                        
-        return jsonify({"message": "Visage non reconnu"}), 401
-        
-    except Exception as e:
-        print("Erreur login facial:", str(e))
-        return jsonify({"message": "Erreur lors de la vérification"}), 500
+
 
 
 @app.route('/logout')
