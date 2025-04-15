@@ -1,0 +1,33 @@
+.popup-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.popup-confirm, .popup-cancel {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.popup-confirm {
+    background-color: #208A9D;
+    color: white;
+}
+
+.popup-cancel {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+.popup-confirm:hover {
+    background-color: #166f7e;
+}
+
+.popup-cancel:hover {
+    background-color: #cfcfcf;
+}

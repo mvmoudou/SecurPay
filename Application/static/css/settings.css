@@ -1,0 +1,29 @@
+.scurit-et-paiements {
+    background-color: #208a9d;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* Gardez le reste du CSS tel quel, mais ajoutez ces modifications : */
+.settings-options {
+    position: relative;
+    margin-top: 120px;
+}
+
+.setting-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 40px;
+    padding: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.setting-item:hover {
+    background-color: rgba(32, 138, 157, 0.1);
+}
+
+/* Ajoutez le reste du CSS que vous avez fourni */
