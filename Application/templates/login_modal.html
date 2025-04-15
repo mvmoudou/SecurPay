@@ -4,18 +4,13 @@
     <div class="login-left">
       <h2>Login on PaySecurApp Or Sign Up</h2>
       <form id="login-form" method="POST">
-
         <!-- Champ username -->
         <div class="input-group">
           <i class="bi bi-person-fill"></i>
           <input type="text" name="username" id="login-username" placeholder="User name" required>
         </div>
 
-        <!-- Champ email -->
-        <div class="input-group">
-          <i class="bi bi-envelope-fill"></i>
-          <input type="email" name="email" id="login-email" placeholder="Email" required>
-        </div>
+        <!-- Supprimez le champ email car il n'est pas nécessaire pour la connexion -->
 
         <!-- Champ mot de passe -->
         <div class="input-group">
@@ -28,10 +23,17 @@
           <a href="#" class="forgot-password">Forget password?</a>
           <button type="submit" class="login-btn">Login</button>
         </div>
+
+        <!-- Ajout du bouton pour la vérification faciale -->
+        <div class="biometric-login">
+          <button type="button" id="start-face-login" class="face-login-btn">
+            <i class="bi bi-camera-fill"></i> Login with Face ID
+          </button>
+        </div>
       </form>
 
       <p class="signup-msg">
-        You don’t have an account? <a href="#" id="go-to-signup">SignUp here</a>
+        You don't have an account? <a href="#" id="go-to-signup">SignUp here</a>
       </p>
     </div>
 
@@ -46,6 +48,8 @@
   <div id="camera-preview-login" class="video-container" style="display: none;">
     <video id="video-login" autoplay muted></video>
     <p id="login-capture-status">Préparation de la caméra...</p>
+    <button id="capture-login" class="capture-btn">Capturer</button>
+    <button id="cancel-login-capture" class="cancel-btn">Annuler</button>
   </div>
 
   <!-- Vérification -->
@@ -56,3 +60,4 @@
     </div>
   </div>
 </div>
+
