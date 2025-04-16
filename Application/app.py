@@ -29,16 +29,15 @@ def historique():
 
     user = User.query.filter_by(username=session['username']).first()
     
-    # Exemple de récupération du solde depuis ta base (si tu l'as)
-    # Ici on suppose un champ user.balance ou alors tu le calcules
     balance = getattr(user, 'balance', 3000)
 
     transactions = [
-        {"details": "Investment", "id": "#00053", "date": "02 Jan 2025 04:56 PM", "amount": "-45.00"},
-        {"details": "Online shopping", "id": "#00736", "date": "13 April 2024 09:33 AM", "amount": "-50.02"},
-        {"details": "Food", "id": "#00221", "date": "25 December 2024 03:16 PM", "amount": "-14.85"},
+        {"details": "Investment", "id": "#00053", "date": "02 Jan 2025 04:56 PM", "amount": -45.00},
+        {"details": "Online shopping", "id": "#00736", "date": "13 April 2024 09:33 AM", "amount": -50.02},
+        {"details": "Food", "id": "#00221", "date": "25 December 2024 03:16 PM", "amount": -14.85},
     ]
-    overdraft = 500  # Exemple fixe
+    
+    overdraft = 500
     return render_template("historique.html",
                             first_name=user.first_name,
                             last_name=user.last_name,
@@ -218,6 +217,8 @@ def update_embeddings(username, new_embeddings, path='embeddings.pkl'):
 # Pour les conditions générales d'utilisation
 @app.route('/terms')
 def terms():
+    if "username" not in session:
+        return redirect('/')
     from_page = request.args.get("from", "")
     return render_template('terms.html', from_page=from_page)
 
@@ -256,6 +257,8 @@ def about():
 
 @app.route('/logout')
 def logout():
+    if "username" not in session:
+        redirect('/')
     return render_template('home.html')
 
 # -------------------- ENREGISTREMENT DES FACES -------------------- #
@@ -339,7 +342,7 @@ def add_card():
         cvv = request.form['cvv']
         holder_name = request.form['holder_name']
         billing_address = request.form['billing_address']
-        pin = request.form['pin']  #  nouveau champ
+        pin = request.form['pin']  
 
         # Création de la carte
         new_card = Card(

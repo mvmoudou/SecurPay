@@ -24,16 +24,31 @@
             <span>PaySecurApp</span>
         </div>
         <ul class="nav-links">
-            <li><a href="/home2" class="{% if active_page == 'home' %}active{% endif %}">Home</a></li>
-            {% if active_page == 'home' %}
-                <li><a href="#" id="open-login-modal-from-features">Features</a></li>
-            {% else %}
-                <li><a href="#" id="open-features-link">Features</a></li>
-            {% endif %}
-            <li><a href="/security" class="{% if active_page == 'security' %}active{% endif %}">Security</a></li>
-            <li><a href="/team" class="{% if active_page == 'team' %}active{% endif %}">Team</a></li>
-            <li><a href="/logout" class="logout-link">Logout</a></li>
+            <li>
+                <a href="/home2" class="{% if active_page == 'home' %}active{% endif %}">Home</a>
+            </li>
+        
+            <li>
+                <a href="#" 
+                   id="{% if active_page == 'features' %}open-login-modal-from-features{% else %}open-features-link{% endif %}"
+                   class="{% if active_page == 'features' %}active{% endif %}">
+                   Features
+                </a>
+            </li>
+        
+            <li>
+                <a href="/security" class="{% if active_page == 'security' %}active{% endif %}">Security</a>
+            </li>
+        
+            <li>
+                <a href="/team" class="{% if active_page == 'team' %}active{% endif %}">Team</a>
+            </li>
+        
+            <li>
+                <a href="/logout" class="logout-link">Logout</a>
+            </li>
         </ul>
+        
         <div class="user-info">
             <div class="avatar">
                 <i class="bi bi-person-circle"></i>
