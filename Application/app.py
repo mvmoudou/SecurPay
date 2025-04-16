@@ -9,6 +9,7 @@ from mtcnn import MTCNN
 from keras_facenet import FaceNet
 from datetime import timedelta # Pour étendre la session de la session de l'utilisateur une fois qu'il 
 from models import db, User, Card
+import re
 
 
 app = Flask(__name__)
@@ -44,7 +45,8 @@ def historique():
                             user_id=user.id,
                             balance=balance,
                             overdraft=overdraft,
-                            transactions=transactions)
+                            transactions=transactions,
+                            active_page='features')
 
 @app.route('/signup-modal', methods=['GET', 'POST'])
 def signup_modal():
@@ -337,31 +339,57 @@ def add_card():
         return redirect('/')
 
     if request.method == 'POST':
-        card_number = request.form['card_number']
-        expiration = request.form['expiration']
-        cvv = request.form['cvv']
-        holder_name = request.form['holder_name']
-        billing_address = request.form['billing_address']
-        pin = request.form['pin']  
+        if request.is_json:
+            data = request.get_json()
+        else:
+            data = request.form
 
-        # Création de la carte
+        card_number = data.get('card_number', '').replace(" ", "").strip()
+        expiration = data.get('expiration', '').strip()
+        cvv = data.get('cvv', '').strip()
+        holder_name = data.get('holder_name', '').strip()
+        billing_address = data.get('billing_address', '').strip()
+        pin = data.get('pin', '').strip()
+
+        # 🔒 Vérifications côté backend
+        if not re.fullmatch(r"\d{13,19}", card_number):
+            return jsonify({"status": "error", "message": "Numéro de carte invalide."}), 400
+
+        if not re.fullmatch(r"(0[1-9]|1[0-2])/20[2-9][0-9]", expiration):
+            return jsonify({"status": "error", "message": "Date d’expiration invalide (MM/YYYY)."}), 400
+
+        if not re.fullmatch(r"\d{3,4}", cvv):
+            return jsonify({"status": "error", "message": "CVV invalide."}), 400
+
+        if not re.fullmatch(r"\d{4,6}", pin):
+            return jsonify({"status": "error", "message": "PIN invalide (4 à 6 chiffres)."}), 400
+
+        if len(billing_address) < 6:
+            return jsonify({"status": "error", "message": "Adresse de facturation trop courte."}), 400
+
+        # Vérifie si la carte existe déjà
+        for card in user.cards:
+            if card.card_number.replace(" ", "") == card_number:
+                return jsonify({"status": "error", "message": "Cette carte existe déjà dans votre compte."}), 400
+
+        # Création
         new_card = Card(
-            card_number=card_number,
             expiration=expiration,
-            cvv=cvv,
             holder_name=holder_name,
             billing_address=billing_address,
             user=user
         )
-        new_card.set_pin(pin)  #  chiffrer et stocker le code PIN
+        new_card.card_number = card_number
+        new_card.cvv = cvv
+        new_card.set_pin(pin)
 
         db.session.add(new_card)
         db.session.commit()
 
-        print("Carte ajoutée :", new_card.masked_number())
-        return redirect('/manage_cards?success=1')
+        return jsonify({"status": "success", "message": "Carte ajoutée avec succès."}), 200
 
-    return render_template('add_card.html', first_name=session['first_name'], last_name=session['last_name'])
+    return render_template('add_card.html', first_name=user.first_name, last_name=user.last_name)
+
 
 @app.route('/manage_cards')
 def manage_cards():
@@ -375,7 +403,8 @@ def manage_cards():
             last_name=user.last_name,
             first_name=user.first_name,
             gender=user.gender,
-            cards=user.cards
+            cards=user.cards,
+            active_page='features'
     )
 
 #-------------Opérations pour la gestion des cartes-----------------#
@@ -526,14 +555,14 @@ def login_modal():
 
                 print("Similarité: ", similarity, flush=True)
 
-                if similarity > 0.6:
+                if similarity > 0.65:
                     match_count += 1
         except Exception as e:
             print("Erreur traitement image:", str(e), flush=True)
             continue
 
 
-    if match_count >= 3:
+    if match_count >= 1:
         session['username'] = user.username
         session['first_name'] = user.first_name
         session['last_name'] = user.last_name
@@ -541,7 +570,93 @@ def login_modal():
         return jsonify({'message': "Connexion réussie !", 'redirect': '/home2'})
     else:
         return jsonify({'message': "Reconnaissance faciale échouée. Veuillez réessayer."}), 401
+    
+#--------Faire un payement---------------#
+@app.route('/make_payment', methods=['GET'])
+def make_payment():
+    if 'username' not in session:
+        return redirect('/')
 
+    user = User.query.filter_by(username=session['username']).first()
+
+    services = [
+        {"id": 1, "name": "Électricité", "amount": 60.50},
+        {"id": 2, "name": "Internet", "amount": 39.99},
+        {"id": 3, "name": "Eau", "amount": 25.20},
+    ]
+
+    return render_template('make_payment.html',
+                           user=user,
+                           services=services,
+                           cards=user.cards,
+                           active_page='features')
+
+
+#------Vérifier les informations de paiement et mise à jour des données de l'utilisateur -------#
+@app.route('/process_payment', methods=['POST'])
+def process_payment():
+    if 'username' not in session:
+        return redirect('/')
+
+    user = User.query.filter_by(username=session['username']).first()
+
+    card_id = request.form.get('card_id')
+    amount = request.form.get('amount')
+    cvv = request.form.get('cvv')  # récupère le CVV ici
+
+    # Nettoyage du champ amount
+    if amount:
+        amount = amount.replace("€", "").replace(" ", "").strip()
+    else:
+        print("Champ vide")
+
+    try:
+        amount = float(amount)
+    except (ValueError, TypeError):
+        return jsonify({"message": "Montant invalide."}), 400
+
+    # Vérifie que la carte existe
+    card = Card.query.filter_by(id=card_id, user_id=user.id).first()
+    if not card:
+        return jsonify({"message": "Carte introuvable ou non autorisée."}), 403
+
+    # Vérifie le CVV
+    if not cvv or cvv != card.cvv:
+        return jsonify({"message": "Code CVV incorrect."}), 403
+
+    # Vérifie les statuts
+    if card.is_blocked or card.is_opposed:
+        return jsonify({"message": "Carte bloquée ou en opposition."}), 403
+
+    # Vérifie le solde
+    if card.balance < amount:
+        return jsonify({"message": "Solde insuffisant pour effectuer ce paiement."}), 400
+
+    #Si tout est ok → soustraire et enregistrer
+    card.balance -= amount
+    db.session.commit()
+    return jsonify({
+        "message": "Paiement réussi !",
+        "redirect": f"/payment_success?amount={amount}&card_id={card.id}"
+    })
+
+
+
+@app.route('/payment_success')
+def payment_success():
+    if 'username' not in session:
+        return redirect('/')
+
+    amount = request.args.get("amount")
+    card_id = request.args.get("card_id")
+
+    user = User.query.filter_by(username=session["username"]).first()
+    card = Card.query.filter_by(id=card_id, user_id=user.id).first()
+
+    if not card:
+        return redirect('/')
+
+    return render_template("payment_success.html", amount=amount, card=card)
 
 #---------------Supprimer les enregistrements---------------#
 @app.route('/cancel-registration')

@@ -1,0 +1,38 @@
+.payment-success {
+    max-width: 600px;
+    margin: 4rem auto;
+    padding: 2rem;
+    background-color: #e7fdfd;
+    border-radius: 12px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.07);
+    text-align: center;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.payment-success h2 {
+    color: #208A9D;
+    margin-bottom: 1.5rem;
+}
+
+.payment-success p {
+    font-size: 1.2rem;
+    margin: 0.5rem 0;
+    color: #333;
+}
+
+.btn-return {
+    display: inline-block;
+    margin-top: 2rem;
+    padding: 0.8rem 1.5rem;
+    background-color: #208A9D;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.btn-return:hover {
+    background-color: #1a7481;
+}

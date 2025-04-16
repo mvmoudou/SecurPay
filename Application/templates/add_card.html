@@ -9,7 +9,7 @@
             <img src="{{ url_for('static', filename='images/card.png') }}" alt="Card Image" class="card-img">
         </div>
 
-        <form class="right-panel" action="/add_card" method="POST">
+        <form id="add-card-form" class="right-panel" method="POST">
             <label for="card-number">Card number</label>
             <input type="text" id="card-number" name="card_number" placeholder="XXXX XXXX XXXX XXXX" maxlength="19" pattern="\d{13,19}" required>
 
@@ -35,3 +35,8 @@
     </div>
 </div>
 {% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/add_card.js') }}"></script>
+{% endblock %}
+
+

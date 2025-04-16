@@ -48,6 +48,8 @@ class Card(db.Model):
     is_opposed = db.Column(db.Boolean, default=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     pin_encrypted = db.Column(db.LargeBinary, nullable=False)
+    balance = db.Column(db.Float, default=100.0) # Le montant par défaut 
+
 
     @property
     def card_number(self):

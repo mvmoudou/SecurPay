@@ -5,8 +5,9 @@
     <meta charset="UTF-8">
     <title>{% block title %}PaySecurApp - Dashboard{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/make_payment.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/payment_success.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/popup.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css')}}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/home2.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/features.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/payment.css') }}">
@@ -29,12 +30,9 @@
             </li>
         
             <li>
-                <a href="#" 
-                   id="{% if active_page == 'features' %}open-login-modal-from-features{% else %}open-features-link{% endif %}"
-                   class="{% if active_page == 'features' %}active{% endif %}">
-                   Features
-                </a>
+                <a href="#" id="open-features-link" class="{% if active_page == 'features' %}active{% endif %}">Features</a>
             </li>
+            
         
             <li>
                 <a href="/security" class="{% if active_page == 'security' %}active{% endif %}">Security</a>

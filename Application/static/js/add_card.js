@@ -1,54 +1,77 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const popup = document.getElementById("payment-popup");
-    const overlay = document.getElementById("payment-overlay");
-    const closeBtn = document.querySelector(".payment-close");
+    const form = document.getElementById("add-card-form");
 
-    if (popup && overlay && closeBtn) {
-        closeBtn.addEventListener("click", () => {
-            popup.classList.add("hidden");
-            overlay.classList.add("hidden");
-        });
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        console.log("Formulaire soumis !");
 
-        overlay.addEventListener("click", () => {
-            popup.classList.add("hidden");
-            overlay.classList.add("hidden");
-        });
-    }
-});
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
 
-document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("payment-form");
+        // 🔍 Nettoyage des données
+        data.card_number = data.card_number.replace(/\s+/g, "").trim();
+        data.expiration = data.expiration.trim();
+        data.cvv = data.cvv.trim();
+        data.pin = data.pin.trim();
+        data.billing_address = data.billing_address.trim();
 
-    if (form) {
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault();
+        // ✅ Vérifications frontend
+        const cardNumberValid = /^\d{13,19}$/.test(data.card_number);
+        const expirationValid = /^(0[1-9]|1[0-2])\/20[2-9][0-9]$/.test(data.expiration);
+        const cvvValid = /^\d{3,4}$/.test(data.cvv);
+        const pinValid = /^\d{4,6}$/.test(data.pin);
+        const addressValid = data.billing_address.length > 5;
 
-            const formData = new FormData(form);
+        if (!cardNumberValid) {
+            showPopup("Numéro de carte invalide. Il doit contenir entre 13 et 19 chiffres.", "error");
+            return;
+        }
+        if (!expirationValid) {
+            showPopup("Date d’expiration invalide. Format attendu : MM/YYYY.", "error");
+            return;
+        }
+        if (!cvvValid) {
+            showPopup("Code CVV invalide. Il doit contenir 3 ou 4 chiffres.", "error");
+            return;
+        }
+        if (!pinValid) {
+            showPopup("Code PIN invalide. Il doit contenir entre 4 et 6 chiffres.", "error");
+            return;
+        }
+        if (!addressValid) {
+            showPopup("Adresse de facturation trop courte.", "error");
+            return;
+        }
 
-            // Debug : affichage des données envoyées
-            const debugData = Object.fromEntries(formData.entries());
-            console.log("Données envoyées :", debugData);
+        try {
+            const response = await fetch("/add_card", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
 
-            try {
-                const response = await fetch("/process_payment", {
-                    method: "POST",
-                    body: formData  // ✅ FormData utilisé à la place de JSON
-                });
+            const result = await response.json();
 
-                const result = await response.json();
-
-                if (!response.ok) {
-                    showPopup(result.message, "error");
-                    return;
-                }
-
-                window.location.href = result.redirect;
-            } catch (err) {
-                showPopup("Erreur de communication avec le serveur", "error");
+            if (result.status === "error" || !response.ok) {
+                showPopup(result.message || "Erreur lors de l'ajout", "error");
+                return;
             }
-        });
-    }
+
+            // ✅ Succès
+            showPopup(result.message || "Carte ajoutée avec succès !");
+            setTimeout(() => {
+                window.location.href = "/manage_cards";
+            }, 1500);
+
+        } catch (error) {
+            showPopup("Erreur de communication avec le serveur", "error");
+        }
+    });
 });
+
+
 
 
 function showPopup(message, type = "success", options = {}) {
