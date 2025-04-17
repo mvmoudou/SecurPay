@@ -32,9 +32,10 @@ SecurPay est une application de paiement avec **authentification multifactoriell
 
 ## Installation
 
-1. Clonez le dépôt :
 
 ```bash
+
+1. Clonez le dépôt :
 git clone https://github.com/Moudou3/SecurPay.git
 cd SecurPay
 
