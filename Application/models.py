@@ -11,6 +11,7 @@ db = SQLAlchemy()
 
 # Clé de chiffrement Fernet à stocker dans .env
 FERNET_KEY = os.getenv('FERNET_KEY')
+EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
 if not FERNET_KEY:
     raise ValueError("La clé FERNET_KEY n’est pas définie dans l’environnement")
 fernet = Fernet(FERNET_KEY.encode())

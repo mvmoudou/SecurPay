@@ -1,35 +1,35 @@
-from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, render_template, request, jsonify, session, redirect
 from flask_sqlalchemy import SQLAlchemy
-import os, shutil, base64, pickle
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import timedelta
+import os, shutil, base64, pickle, re, string, random, json, smtplib
 import numpy as np
 import cv2
-import json
 from mtcnn import MTCNN
 from keras_facenet import FaceNet
-from datetime import timedelta # Pour étendre la session de la session de l'utilisateur une fois qu'il 
-from models import db, User, Card, CardHistory
-import re
-import string
-import random
-from flask import Flask
-import smtplib
 from email.mime.text import MIMEText
+from dotenv import load_dotenv
+from models import db, User, Card, CardHistory
 
+# Chargement des variables d’environnement
+load_dotenv()
 
-
+# Config Flask
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_ADDRESS = 'rosaliecorinetomeyum@gmail.com'  # ton adresse Gmail
-EMAIL_PASSWORD = 'xdcsgmjjlytsbrgc'    # le mot de passe généré (sans espace)
-
 app.permanent_session_lifetime = timedelta(minutes=20)
 
+# Email config
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_ADDRESS = os.getenv('EMAIL_ADDRESS')
+EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
+
+# Init DB
 db.init_app(app)
+
 
 
 
