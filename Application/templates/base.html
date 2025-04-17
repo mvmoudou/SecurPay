@@ -35,7 +35,7 @@
             
         
             <li>
-                <a href="/security" class="{% if active_page == 'security' %}active{% endif %}">Security</a>
+                <a href="/security" class="{% if active_page == 'security' %}active{% endif %}">Setings</a>
             </li>
         
             <li>
@@ -67,6 +67,8 @@
 <script src="{{ url_for('static', filename='js/payment.js') }}"></script>
 
 {% block scripts %}
+{% endblock %}
+{% block styles %}
 {% endblock %}
 </body>
 </html>

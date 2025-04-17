@@ -8,14 +8,25 @@ import json
 from mtcnn import MTCNN
 from keras_facenet import FaceNet
 from datetime import timedelta # Pour étendre la session de la session de l'utilisateur une fois qu'il 
-from models import db, User, Card
+from models import db, User, Card, CardHistory
 import re
+import string
+import random
+from flask import Flask
+import smtplib
+from email.mime.text import MIMEText
+
 
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_ADDRESS = 'rosaliecorinetomeyum@gmail.com'  # ton adresse Gmail
+EMAIL_PASSWORD = 'xdcsgmjjlytsbrgc'    # le mot de passe généré (sans espace)
+
 app.permanent_session_lifetime = timedelta(minutes=20)
 
 db.init_app(app)
@@ -351,7 +362,7 @@ def add_card():
         billing_address = data.get('billing_address', '').strip()
         pin = data.get('pin', '').strip()
 
-        # 🔒 Vérifications côté backend
+        # Vérifications côté backend
         if not re.fullmatch(r"\d{13,19}", card_number):
             return jsonify({"status": "error", "message": "Numéro de carte invalide."}), 400
 
@@ -372,7 +383,11 @@ def add_card():
             if card.card_number.replace(" ", "") == card_number:
                 return jsonify({"status": "error", "message": "Cette carte existe déjà dans votre compte."}), 400
 
-        # Création
+        # Limite à 3 cartes par utilisateur
+        if len(user.cards) >= 3:
+            return jsonify({"status": "error", "message": "Vous avez déjà atteint la limite de 3 cartes."}), 400
+
+                # Création
         new_card = Card(
             expiration=expiration,
             holder_name=holder_name,
@@ -413,40 +428,207 @@ def manage_cards():
 @app.route('/toggle_block/<int:card_id>', methods=['POST'])
 def toggle_block(card_id):
     try:
+        data = request.get_json()
+        reason = data.get("reason", "")
+
         card = Card.query.get(card_id)
         if not card:
-            return jsonify(status="error", message="Card not found"), 404
+            return jsonify(status="error", message="Carte introuvable"), 404
+
         card.is_blocked = not card.is_blocked
         db.session.commit()
+
+        # Historique
+        action = "block" if card.is_blocked else "unblock"
+        history = CardHistory(
+            card_id=card.id,
+            user_id=card.user_id,
+            action=action,
+            reason=reason
+        )
+        db.session.add(history)
+        db.session.commit()
+
         return jsonify(status="success", is_blocked=card.is_blocked)
     except Exception as e:
         print(f"Erreur toggle_block: {e}")
         return jsonify(status="error", message=str(e)), 500
 
+
 # Faire opposition à la carte 
 @app.route('/oppose_card/<int:card_id>', methods=['POST'])
 def oppose_card(card_id):
     try:
+        data = request.get_json()
+        reason = data.get("reason", "")
+
         card = Card.query.get(card_id)
         if not card:
-            return jsonify(status="error", message="Card not found"), 404
+            return jsonify(status="error", message="Carte introuvable"), 404
+
         card.is_opposed = not card.is_opposed
         db.session.commit()
+
+        # Historique
+        action = "oppose" if card.is_opposed else "revert_oppose"
+        history = CardHistory(
+            card_id=card.id,
+            user_id=card.user_id,
+            action=action,
+            reason=reason
+        )
+        db.session.add(history)
+        db.session.commit()
+
         return jsonify(status="success", is_opposed=card.is_opposed)
     except Exception as e:
         print(f"Erreur oppose_card: {e}")
         return jsonify(status="error", message=str(e)), 500
 
+
 # Consulter le code pin 
-@app.route('/card/<int:card_id>/get_pin')
-def get_pin(card_id):
-    card = Card.query.get(card_id)
-    if card:
-        try:
-            return jsonify(pin=card.get_pin())
-        except Exception as e:
-            return jsonify(error="Erreur lors du déchiffrement du code PIN")
-    return jsonify(error="Carte non trouvée")
+#------- Fonction d'envoie de l'email
+def send_email(to, subject, body):
+    msg = MIMEText(body)
+    msg['Subject'] = subject
+    msg['From'] = EMAIL_ADDRESS
+    msg['To'] = to
+
+    try:
+        with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as smtp:
+            smtp.starttls()
+            smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+            smtp.send_message(msg)
+            print(f"Email envoyé à {to}")
+    except Exception as e:
+        print("Erreur :", e)
+
+
+# Envoi du code à l'adresse mail
+@app.route('/card/<int:card_id>/request_pin_code', methods=['POST'])
+def request_pin_code(card_id):
+    if 'username' not in session:
+        return jsonify({"status": "error", "message": "Non autorisé"}), 403
+
+    user = User.query.filter_by(username=session['username']).first()
+    card = Card.query.filter_by(id=card_id, user_id=user.id).first()
+
+    if not card:
+        return jsonify({"status": "error", "message": "Carte introuvable"}), 404
+
+    # Génération et envoi du code
+    code = ''.join(random.choices(string.digits, k=6))
+    session['pin_verification_code'] = code
+    send_email(user.email, "Code de vérification pour votre carte", f"Votre code est : {code}")
+
+    return jsonify({"status": "success", "message": "Code envoyé à votre adresse mail."})
+
+#---- Vérification du code PIN qu'on envoie par mail à l'utilisateur (si correspond, alors on lui 
+# envoie son code secret)
+
+@app.route('/card/<int:card_id>/verify_code_and_get_pin', methods=['POST'])
+def verify_code_and_get_pin(card_id):
+    if 'username' not in session:
+        return jsonify({"status": "error", "message": "Non autorisé"}), 403
+
+    user = User.query.filter_by(username=session['username']).first()
+    code_entered = request.json.get("code")
+    expected = session.get('pin_verification_code')
+
+    if code_entered != expected:
+        return jsonify({"status": "error", "message": "Code incorrect"}), 403
+
+    card = Card.query.filter_by(id=card_id, user_id=user.id).first()
+    if not card:
+        return jsonify({"status": "error", "message": "Carte non trouvée"}), 404
+
+    try:
+        return jsonify({"status": "success", "pin": card.get_pin()})
+    except Exception:
+        return jsonify({"status": "error", "message": "Erreur lors du déchiffrement du code PIN"}), 500
+
+
+
+#-Supprimer une carte de l'application 
+@app.route('/delete_card/<int:card_id>', methods=['POST'])
+def delete_card(card_id):
+    if 'username' not in session:
+        return jsonify({"status": "error", "message": "Non autorisé"}), 403
+
+    user = User.query.filter_by(username=session['username']).first()
+    if not user:
+        return jsonify({"status": "error", "message": "Utilisateur non trouvé."}), 404
+
+    card = Card.query.filter_by(id=card_id, user_id=user.id).first()
+    if not card:
+        return jsonify({"status": "error", "message": "Carte introuvable"}), 404
+
+    data = request.get_json()
+    reason = data.get("reason", "")
+
+    # Historique AVANT suppression
+    history = CardHistory(
+        card_id=card.id,
+        user_id=card.user_id,
+        action="delete",
+        reason=reason
+    )
+    db.session.add(history)
+    card.is_deleted = True
+    db.session.commit()
+
+    return jsonify({"status": "success", "message": "Carte supprimée avec succès"}), 200
+
+
+#------ Garder l'historique des opérations sur les cartes cartes 
+@app.route('/card_history')
+def card_history():
+    if 'username' not in session:
+        return redirect('/')
+
+    user = User.query.filter_by(username=session['username']).first()
+    history = CardHistory.query \
+        .join(Card) \
+        .filter(Card.user_id == user.id) \
+        .order_by(CardHistory.timestamp.desc()) \
+        .all()
+
+    return render_template("card_history.html", user=user, history=history)
+
+# Restoration des cartes bloquées, supprimées ou opposées
+@app.route('/restore_card/<int:card_id>', methods=['POST'])
+def restore_card(card_id):
+    if 'username' not in session:
+        return jsonify({"status": "error", "message": "Non autorisé"}), 403
+
+    user = User.query.filter_by(username=session['username']).first()
+    card = Card.query.filter_by(id=card_id, user_id=user.id).first()
+
+    if not card:
+        return jsonify({"status": "error", "message": "Carte introuvable"}), 404
+
+    # Ne restaurer que si elle est marquée supprimée
+    if not card.is_deleted:
+        return jsonify({"status": "error", "message": "Carte non supprimée"}), 400
+
+    data = request.get_json()
+    reason = data.get("reason", "")
+
+    card.is_deleted = False
+    db.session.commit()
+
+    # Historique
+    history = CardHistory(
+        card_id=card.id,
+        user_id=card.user_id,
+        action="restore",
+        reason=reason or "Carte restaurée via historique"
+    )
+    db.session.add(history)
+    db.session.commit()
+
+    return jsonify({"status": "success", "message": "Carte restaurée avec succès"}), 200
+ 
 
 
 #------------Connexion avec reconnaissance faciale---------------#
@@ -579,18 +761,21 @@ def make_payment():
 
     user = User.query.filter_by(username=session['username']).first()
 
+    # Liste des services
     services = [
         {"id": 1, "name": "Électricité", "amount": 60.50},
         {"id": 2, "name": "Internet", "amount": 39.99},
         {"id": 3, "name": "Eau", "amount": 25.20},
     ]
 
+    # On ne transmet que les cartes valides (non bloquées et non opposées)
+    valid_cards = [card for card in user.cards if not card.is_blocked and not card.is_opposed]
+
     return render_template('make_payment.html',
                            user=user,
                            services=services,
-                           cards=user.cards,
+                           cards=valid_cards,
                            active_page='features')
-
 
 #------Vérifier les informations de paiement et mise à jour des données de l'utilisateur -------#
 @app.route('/process_payment', methods=['POST'])
@@ -632,7 +817,7 @@ def process_payment():
     if card.balance < amount:
         return jsonify({"message": "Solde insuffisant pour effectuer ce paiement."}), 400
 
-    #Si tout est ok → soustraire et enregistrer
+    #Si tout est ok soustraire et enregistrer
     card.balance -= amount
     db.session.commit()
     return jsonify({

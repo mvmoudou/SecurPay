@@ -46,6 +46,7 @@ class Card(db.Model):
     billing_address = db.Column(db.String(200), nullable=False)
     is_blocked = db.Column(db.Boolean, default=False)
     is_opposed = db.Column(db.Boolean, default=False)
+    is_deleted = db.Column(db.Boolean, default=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     pin_encrypted = db.Column(db.LargeBinary, nullable=False)
     balance = db.Column(db.Float, default=100.0) # Le montant par défaut 
@@ -85,3 +86,17 @@ class Card(db.Model):
 
     def get_pin(self):
         return fernet.decrypt(self.pin_encrypted).decode()
+
+# Pour sauvegarder l'historique des raisons de suppression, blocage, opposition des cartes
+from datetime import datetime
+
+class CardHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    card_id = db.Column(db.Integer, db.ForeignKey('card.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    action = db.Column(db.String(50), nullable=False)  # 'block', 'unblock', 'oppose', etc.
+    reason = db.Column(db.Text, nullable=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    card = db.relationship('Card', backref='history')
+    user = db.relationship('User')
