@@ -430,6 +430,9 @@ def toggle_block(card_id):
     try:
         data = request.get_json()
         reason = data.get("reason", "")
+        if not reason:
+            return jsonify(status="error", message="Veuillez fournir une raison."), 400
+
 
         card = Card.query.get(card_id)
         if not card:
@@ -449,7 +452,12 @@ def toggle_block(card_id):
         db.session.add(history)
         db.session.commit()
 
-        return jsonify(status="success", is_blocked=card.is_blocked)
+        return jsonify(
+            status="success",
+            message="Carte débloquée avec succès" if not card.is_blocked else "Carte bloquée avec succès",
+            is_blocked=card.is_blocked
+        )
+
     except Exception as e:
         print(f"Erreur toggle_block: {e}")
         return jsonify(status="error", message=str(e)), 500
@@ -461,12 +469,16 @@ def oppose_card(card_id):
     try:
         data = request.get_json()
         reason = data.get("reason", "")
+        if not reason:
+            return jsonify(status="error", message="Veuillez fournir une raison."), 400
+
 
         card = Card.query.get(card_id)
         if not card:
             return jsonify(status="error", message="Carte introuvable"), 404
 
         card.is_opposed = not card.is_opposed
+
         db.session.commit()
 
         # Historique
@@ -480,7 +492,12 @@ def oppose_card(card_id):
         db.session.add(history)
         db.session.commit()
 
-        return jsonify(status="success", is_opposed=card.is_opposed)
+        return jsonify(
+            status="success",
+            message="Opposition levée avec succès" if not card.is_opposed else "Carte mise en opposition",
+            is_opposed=card.is_opposed
+        )
+
     except Exception as e:
         print(f"Erreur oppose_card: {e}")
         return jsonify(status="error", message=str(e)), 500
@@ -565,6 +582,9 @@ def delete_card(card_id):
 
     data = request.get_json()
     reason = data.get("reason", "")
+    if not reason:
+        return jsonify(status="error", message="Veuillez fournir une raison."), 400
+
 
     # Historique AVANT suppression
     history = CardHistory(
@@ -613,6 +633,9 @@ def restore_card(card_id):
 
     data = request.get_json()
     reason = data.get("reason", "")
+    if not reason:
+        return jsonify(status="error", message="Veuillez fournir une raison."), 400
+
 
     card.is_deleted = False
     db.session.commit()

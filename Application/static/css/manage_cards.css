@@ -618,5 +618,183 @@
     cursor: not-allowed;
     pointer-events: none;
   }
+
+  .deleted-card {
+    opacity: 0.5;
+    background-color: #eee;
+    border: 2px dashed #ccc;
+    text-align: center;
+    padding: 20px;
+}
+/* Carte supprimée */
+.carousel-card.deleted-card {
+    opacity: 0.4;
+    background-color: #f8d7da;
+    border: 2px dashed #dc3545;
+    position: relative;
+  }
+  
+  .carousel-card.deleted-card::before {
+    content: "Supprimée";
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #dc3545;
+    color: white;
+    padding: 3px 8px;
+    font-size: 0.9em;
+    border-radius: 4px;
+  }
+  
+  /* Carte bloquée */
+  .carousel-card.blocked-card {
+    background-color: #fff3cd;
+    border: 2px solid #ffc107;
+    position: relative;
+  }
+  
+  .carousel-card.blocked-card::before {
+    content: "Bloquée";
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #ffc107;
+    color: #000;
+    padding: 3px 8px;
+    font-size: 0.9em;
+    border-radius: 4px;
+  }
+  
+  /* Carte en opposition */
+  .carousel-card.opposed-card {
+    background-color: #cce5ff;
+    border: 2px solid #007bff;
+    position: relative;
+  }
+  
+  .carousel-card.opposed-card::before {
+    content: "Opposée";
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #007bff;
+    color: white;
+    padding: 3px 8px;
+    font-size: 0.9em;
+    border-radius: 4px;
+  }
+  .carousel-card .status-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 5px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+    border-radius: 6px;
+    z-index: 2;
+  }
+  
+  /* Couleurs de badges selon l'état */
+  .status-badge.deleted {
+    background-color: #dc3545; /* Rouge */
+  }
+  
+  .status-badge.blocked {
+    background-color: #ffc107; /* Jaune */
+    color: #333;
+  }
+  
+  .status-badge.opposed {
+    background-color: #208A9D; /* Couleur thème */
+  }
+  .action-btn.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+/* Overlay sombre en arrière-plan */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* Contenu de la modale */
+  .modal-content {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    max-width: 450px;
+    width: 100%;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Titre */
+  .modal-content h2 {
+    font-size: 1.3rem;
+    color: #208A9D;
+    margin-bottom: 15px;
+  }
+  
+  /* Textarea */
+  .modal-content textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    resize: vertical;
+    font-size: 0.95rem;
+    font-family: inherit;
+    box-sizing: border-box;
+  }
+  
+  /* Boutons */
+  .modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+  }
+  
+  .modal-buttons .confirm-btn,
+  .modal-buttons .cancel-btn {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  .modal-buttons .confirm-btn {
+    background-color: #208A9D;
+    color: white;
+  }
+  
+  .modal-buttons .cancel-btn {
+    background-color: #ccc;
+    color: #333;
+  }
+  
+  .modal-buttons .confirm-btn:hover {
+    background-color: #176b7a;
+  }
+  
+  .modal-buttons .cancel-btn:hover {
+    background-color: #bbb;
+  }
+  .modal-content textarea:focus {
+    border-color: #208A9D;
+    outline: none;
+    box-shadow: 0 0 4px rgba(32, 138, 157, 0.5);
+  }
+    
   
 

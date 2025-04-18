@@ -26,11 +26,19 @@
                 <input type="text" name="cvv" id="cvv" placeholder="CVC" required>
             </div>
         </div>
-
-        <button type="submit" class="pay-btn"><i class="bi bi-lock-fill"></i> Payer</button>
+        <input type="hidden" id="payment-amount" value="65"> <!-- ou dynamique -->
+        <input type="hidden" id="payment-card-id" value="12"> <!-- id carte utilisée -->
+        
+        <button type="button" class="pay-btn" onclick="handlePaymentWithVerification()">
+          <i class="bi bi-lock-fill"></i> Payer
+        </button>
+      
     </form>
 
     <span class="payment-close"><i class="bi bi-x-lg"></i></span>
 </div>
 
 <div id="payment-overlay" class="payment-overlay hidden"></div>
+{% include 'verification.html' %}
+<script src="{{ url_for('static', filename='js/verification.js') }}"></script>
+

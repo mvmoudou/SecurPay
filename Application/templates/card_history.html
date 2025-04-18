@@ -27,11 +27,11 @@
             <td>{{ entry.reason or 'Non précisée' }}</td>
             <td>
               {% if entry.action == 'block' %}
-                <button class="action-btn" onclick="updateCardStatus('{{ entry.card_id }}', 'unblock')">Débloquer</button>
+                <button class="action-btn" onclick="updateCardStatus('{{ entry.card_id }}', 'unblock', this)">Débloquer</button>
               {% elif entry.action == 'oppose' %}
-                <button class="action-btn" onclick="updateCardStatus('{{ entry.card_id }}', 'revert_oppose')">Lever opposition</button>
+                <button class="action-btn" onclick="updateCardStatus('{{ entry.card_id }}', 'revert_oppose', this)">Lever opposition</button>
               {% elif entry.action == 'delete' and entry.card.is_deleted %}
-                <button class="action-btn" onclick="updateCardStatus('{{ entry.card_id }}', 'restore')">Restaurer</button>
+                <button class="action-btn" onclick="updateCardStatus('{{ entry.card_id }}', 'restore', this)">Restaurer</button>
               {% endif %}
             </td>
           </tr>
@@ -143,12 +143,16 @@
 
 {% block scripts %}
 <script>
-function updateCardStatus(cardId, action) {
+function updateCardStatus(cardId, action, button) {
   let url;
   if (action === 'unblock') url = `/toggle_block/${cardId}`;
   else if (action === 'revert_oppose') url = `/oppose_card/${cardId}`;
   else if (action === 'restore') url = `/restore_card/${cardId}`;
   else return;
+
+  button.disabled = true;
+  button.style.opacity = "0.6";
+  button.innerText = "Traitement...";
 
   fetch(url, {
     method: 'POST',
@@ -162,10 +166,14 @@ function updateCardStatus(cardId, action) {
       setTimeout(() => location.reload(), 1000);
     } else {
       showPopup(data.message || "Erreur inattendue", 'error');
+      button.disabled = false;
+      button.innerText = "Réessayer";
     }
   })
   .catch(err => {
     showPopup("Erreur lors de la requête", 'error');
+    button.disabled = false;
+    button.innerText = "Réessayer";
   });
 }
 </script>
