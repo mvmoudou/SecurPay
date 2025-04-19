@@ -25,6 +25,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const formData = new FormData(form);
 
+            const amount = parseFloat(formData.get("amount"));
+            if (amount > 50) {
+                const cardId = formData.get("card_id");
+
+                // Appelle le backend pour envoyer le code par mail
+                try {
+                    const res = await fetch(`/card/${cardId}/request_pin_code`, {
+                        method: "POST"
+                    });
+
+                    if (!res.ok) {
+                        const data = await res.json();
+                        showPopup(data.error || "Erreur lors de l'envoi du code", "error");
+                        return;
+                    }
+
+                    // Affiche la modale de vérification
+                    document.getElementById("verification-overlay").classList.remove("hidden");
+                    document.getElementById("verification-modal").classList.remove("hidden");
+
+                    return; //Stop ici : on attend que l'utilisateur entre le code avant de soumettre
+                } catch (err) {
+                    showPopup("Échec de la vérification", "error");
+                    return;
+                }
+            }
+
+
             // Debug : affichage des données envoyées
             const debugData = Object.fromEntries(formData.entries());
             console.log("Données envoyées :", debugData);
@@ -49,6 +77,43 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+
+
+async function submitPaymentViaFetch() {
+    console.log("submitPaymentViaFetch() appelé");  //TRACE
+
+    const form = document.getElementById("payment-form");
+    const formData = new FormData(form);
+
+    const debugData = Object.fromEntries(formData.entries());
+    console.log("Données envoyées au paiement :", debugData);
+
+    try {
+        const response = await fetch("/process_payment", {
+            method: "POST",
+            body: formData
+        });
+
+        const result = await response.json();
+        console.log("Résultat reçu :", result);
+
+        if (!response.ok) {
+            showPopup(result.message || "Échec du paiement", "error");
+            return;
+        }
+
+        showPopup("Paiement effectué avec succès");
+        setTimeout(() => {
+            window.location.href = result.redirect;
+        }, 2000);
+    } catch (err) {
+        console.error(" Erreur serveur :", err);
+        showPopup("Erreur serveur pendant le paiement", "error");
+    }
+}
+
+// Rendez la fonction disponible globalement
+window.submitPaymentViaFetch = submitPaymentViaFetch;
 
 
 function showPopup(message, type = "success", options = {}) {
@@ -126,3 +191,6 @@ function showPopup(message, type = "success", options = {}) {
     // Retourner le popup afin d'utiliser la fonction dans une variable 
     return popup;
 }
+
+window.submitPaymentViaFetch = submitPaymentViaFetch;
+

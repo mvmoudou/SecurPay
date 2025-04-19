@@ -517,8 +517,11 @@ def send_email(to, subject, body):
             smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
             smtp.send_message(msg)
             print(f"Email envoyé à {to}")
+            return True
     except Exception as e:
         print("Erreur :", e)
+        return False
+
 
 
 # Envoi du code à l'adresse mail
@@ -530,16 +533,23 @@ def request_pin_code(card_id):
     user = User.query.filter_by(username=session['username']).first()
     card = Card.query.filter_by(id=card_id, user_id=user.id).first()
 
-    if not card:
-        return jsonify({"status": "error", "message": "Carte introuvable"}), 404
+    if not card or card.is_blocked or card.is_deleted or card.is_opposed:
+        return jsonify({'error': 'Carte introuvable'}), 404
+
 
     # Génération et envoi du code
     code = ''.join(random.choices(string.digits, k=6))
     session['pin_verification_code'] = code
-    send_email(user.email, "Code de vérification pour votre carte", f"Votre code est : {code}")
+    success = send_email(user.email, "Code de vérification pour votre carte", f"Votre code est : {code}")
+
+    if not success:
+        return jsonify({"status": "error", "message": "Échec de l'envoi de l'email"}), 500
+    
+    print(f"Requête reçue pour envoyer un code à l'utilisateur {user.username} pour la carte {card.id}")
+    print(f"Email : {user.email}")
+
 
     return jsonify({"status": "success", "message": "Code envoyé à votre adresse mail."})
-
 #---- Vérification du code PIN qu'on envoie par mail à l'utilisateur (si correspond, alors on lui 
 # envoie son code secret)
 
@@ -803,6 +813,8 @@ def make_payment():
 #------Vérifier les informations de paiement et mise à jour des données de l'utilisateur -------#
 @app.route('/process_payment', methods=['POST'])
 def process_payment():
+    print("Paiement reçu")
+    print("Form:", request.form)
     if 'username' not in session:
         return redirect('/')
 

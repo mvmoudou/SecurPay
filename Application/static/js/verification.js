@@ -45,33 +45,47 @@ function startPINVerification(cardId, onSuccess) {
   // Soumission du code
   function submitPINVerification() {
     const code = Array.from(document.querySelectorAll(".code-box"))
-      .map(b => b.value.trim())
-      .join("");
-  
+        .map(b => b.value.trim())
+        .join("");
+
     if (code.length < 6) {
-      showError("Code incomplet");
-      return;
+        showError("Code incomplet");
+        return;
     }
-  
+
+    console.log("Code PIN soumis :", code);
+    console.log("🪪 Card ID :", window.__currentCardId);
+
     fetch(`/card/${window.__currentCardId}/verify_code_and_get_pin`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: code })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: code })
     })
     .then(res => res.json())
     .then(data => {
-      if (data.status === 'success') {
-        closePINVerificationModal();
-        showPINPopup(data.pin); // affichage final
-        if (typeof window.__onPINSuccess === 'function') {
-          window.__onPINSuccess(data.pin);
+        if (data.status === 'success') {
+            closePINVerificationModal();
+            if (window.__pinVerificationMode === "show_pin") {
+              showPINPopup(data.pin);
+          }
+          console.log("Callback détecté ?", window.__onPINSuccess);
+            console.log("Type du callback :", typeof window.__onPINSuccess);
+
+
+            console.log("Code PIN correct, exécution du callback");
+            if (typeof window.__onPINSuccess === 'function') {
+              console.log("Callback valide, exécution...");
+                window.__onPINSuccess();
+            } else {
+                console.error("__onPINSuccess non défini ou pas une fonction");
+            }
+        } else {
+            showError(data.message || "Code invalide");
         }
-      } else {
-        showError(data.message || "Code invalide");
-      }
     })
     .catch(() => showError("Erreur serveur"));
-  }
+}
+
   
   // Efface les cases
   function clearPINInputs() {
@@ -123,6 +137,7 @@ function startPINVerification(cardId, onSuccess) {
     const value = document.getElementById("pin-value");
     const progress = document.getElementById("progress-bar");
     const countdown = document.getElementById("countdown");
+    console.log("PIN affiché :", pin);
   
     value.textContent = pin;
     progress.style.width = "100%";
@@ -142,16 +157,44 @@ function startPINVerification(cardId, onSuccess) {
     }, 1000);
   }
   
-function handlePaymentWithVerification() {
+  function handleShowSecretCode(cardId) {
+    window.__pinVerificationMode = "show_pin"; // <- Ici tu définis le mode
+    window.__onPINSuccess = () => {
+      console.log("Vérification réussie pour affichage du code PIN.");
+      // Rien d'autre ici : showPINPopup est appelé automatiquement dans submitVerification
+    };
+  
+    startPINVerification(cardId, window.__onPINSuccess);
+  }
+  
+
+  function handlePaymentWithVerification() {
     const amount = Number(document.getElementById("payment-amount").value);
     const cardId = document.getElementById("payment-card-id").value;
   
+    // On stocke la fonction à exécuter après vérification
+    window.__onPINSuccess = () => {
+      console.log("Code vérifié, déclenchement du paiement");
+      setTimeout(() => {
+        if (typeof window.submitPaymentViaFetch === 'function') {
+          console.log("Appel de submitPaymentViaFetch depuis PIN success");
+          window.submitPaymentViaFetch();
+        } else {
+          console.error("submitPaymentViaFetch non défini au moment du callback");
+        }
+      }, 100);
+  };
+  
     if (amount > 50) {
-      startPINVerification(cardId, () => {
-        document.getElementById("payment-form").submit(); // après vérification réussie
-      });
+      window.__pinVerificationMode = "payment";  // Contexte de paiement
+      startPINVerification(cardId, window.__onPINSuccess); // enregistre et lance
     } else {
-      document.getElementById("payment-form").submit(); // pas besoin de vérification
+      submitPaymentViaFetch();
     }
   }
+
   
+  
+window.submitPINVerification = submitPINVerification;
+window.handlePaymentWithVerification = handlePaymentWithVerification;
+

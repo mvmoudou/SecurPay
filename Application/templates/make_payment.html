@@ -43,10 +43,6 @@ function openPaymentPopup() {
         alert("Veuillez sélectionner un service et une carte.");
         return;
     }
-
-    console.log("Montant sélectionné :", service.dataset.amount);
-    console.log("Valeur assignée à amount_hidden :", document.getElementById("amount_hidden").value);
-
     const popup = document.getElementById("payment-popup");
     const overlay = document.getElementById("payment-overlay");
 
@@ -56,7 +52,16 @@ function openPaymentPopup() {
     document.querySelector('#expiration').value = card.dataset.expiration;
 
     document.getElementById("card_id_hidden").value = card.value;
-    document.getElementById("amount_hidden").value = parseFloat(service.dataset.amount);
+    document.getElementById("payment-card-id").value = card.value;
+    // POur mettre à jour le montant de manière dynamique 
+    const amount = parseFloat(service.dataset.amount);
+    document.getElementById("amount_hidden").value = amount;
+    document.getElementById("payment-amount").value = amount;
+
+    console.log("Montant sélectionné :", service.dataset.amount);
+    console.log("Valeur assignée à amount_hidden :", document.getElementById("amount_hidden").value);
+
+
 
 
         // Affiche la modale
@@ -65,4 +70,8 @@ function openPaymentPopup() {
     document.body.style.overflow = "hidden";
 }
 </script>
+
+    <!-- Important : payment.js AVANT verification.js -->
+    <script src="{{ url_for('static', filename='js/payment.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/verification.js') }}"></script>
 {% endblock %}
