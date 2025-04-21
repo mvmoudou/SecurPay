@@ -1,0 +1,108 @@
+<!-- bank_transfer.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div id="bank-transfer-container" class="transfer-container">
+    <h1 class="title">Bank Transfer</h1>
+  
+    <div class="tabs-transfer">
+      <button class="tab-transfer active">Transfer</button>
+      <button class="tab-transfer">Historical</button>
+    </div>
+  
+    <div class="account-info">
+        <p class="account-title">Account to be debited</p>
+        <p class="account-name">{{ user.gender == 'F' and 'Mme' or 'M.' }} {{ user.last_name.upper() }} {{ user.first_name.capitalize() }}</p>
+        <p class="account-number">N°{{ main_card.masked_number() }}</p>
+      </div>      
+  
+    <div class="arrow-separator">&#8595;</div>
+  
+    <form id="transfer-form" class="transfer-form" onsubmit="handleBankTransferSubmit(event)">
+      <div class="beneficiary-block">
+        <h3 class="choose-beneficiary" onclick="openBeneficiaryPopup()">Choose your beneficiary</h3>
+    
+        <!-- Résumé et champ caché pour le bénéficiaire sélectionné -->
+        <input type="hidden" id="selected-beneficiary-id" name="beneficiary_id">
+        <p id="beneficiary-summary" class="beneficiary-summary hidden"></p>
+    
+        <label>Amount :</label>
+        <div class="amount-group">
+          <input type="number" name="amount" required min="1">
+          <select name="currency">
+            <option value="EUR">EUR</option>
+            <option value="DOLLAR">DOLLAR</option>
+            <option value="FCFA">FCFA</option>
+          </select>
+        </div>
+    
+        <label>Type of transfer :</label>
+        <select name="transfer_type">
+          <option value="instant">Instant</option>
+          <option value="standard">Standard</option>
+          <option value="scheduled">Scheduled</option>
+        </select>
+    
+        <label>Motive :</label>
+        <input type="text" name="motive" placeholder="E.g. Rent payment" required>
+    
+        <button type="submit" class="validate-btn">Validate</button>
+      </div>
+    </form>
+    
+    <div class="actions-transfer">
+      <button class="btn-secondary" onclick="openAddBeneficiaryModal()">
+        <i class="bi bi-person-plus"></i> Add a beneficiary
+      </button>
+      <button class="btn-secondary" onclick="openManageBeneficiaries()">
+        <i class="bi bi-people"></i> Manage my beneficiaries
+      </button>
+    </div>
+
+    <!-- Beneficiary Popup -->
+<div id="beneficiary-popup" class="popup-overlay hidden">
+  <div class="popup-content">
+    <h2>Select a Beneficiary</h2>
+    <ul id="beneficiary-list">
+      <!-- Bénéficiaires injectés dynamiquement via JS -->
+    </ul>
+    <button onclick="closeBeneficiaryPopup()" class="btn-secondary">Cancel</button>
+  </div>
+</div>
+
+<!-- Champ caché pour le bénéficiaire -->
+<input type="hidden" id="selected-beneficiary-id" name="beneficiary_id">
+<p id="beneficiary-summary" class="beneficiary-summary hidden"></p>
+
+<div id="add-beneficiary-modal" class="popup-overlay hidden" style="display: none;"> 
+  <div class="popup-content">
+    <h2>Add a Beneficiary</h2>
+    <form id="add-beneficiary-form" onsubmit="handleAddBeneficiary(event)">
+      <label>Full name:</label>
+      <input type="text" name="name" required>
+    
+      <label>IBAN:</label>
+      <input type="text" name="iban" required>
+    
+      <label>Card Number (last 4 digits or full):</label>
+      <input type="text" name="card_number" id="beneficiary-card" required pattern="\\d{19}" title="19 digits required">
+    
+      <button type="submit" class="validate-btn">Add</button>
+      <button type="button" class="btn-secondary" onclick="closeAddBeneficiaryModal()">Cancel</button>
+    </form>
+      </div>
+</div>
+
+
+  </div>
+  
+{% endblock %}
+
+{% block scripts%}
+
+
+<script src="{{ url_for('static', filename='js/bank_transfer.js') }}"></script>
+
+
+
+{% endblock %}

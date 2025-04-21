@@ -1,0 +1,173 @@
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .modal {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    width: 500px;
+    max-width: 90%;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .modal h2 {
+    margin-top: 0;
+    font-size: 1.6rem;
+    color: #208A9D;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .modal label {
+    display: block;
+    margin-top: 15px;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.95rem;
+  }
+  
+  .modal input,
+  .modal select {
+    width: 100%;
+    padding: 10px 12px;
+    margin-top: 5px;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+  }
+  
+  .modal input:focus,
+  .modal select:focus {
+    border-color: #208A9D;
+    outline: none;
+  }
+  
+  .submit-btn {
+    margin-top: 25px;
+    width: 100%;
+    background-color: #208A9D;
+    color: white;
+    border: none;
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.25s ease-in-out;
+  }
+  
+  .submit-btn:hover {
+    background-color: #176a77;
+  }
+  
+  .close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #999;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  
+  .close-btn:hover {
+    color: #208A9D;
+  }
+  
+  .first-card-warning {
+    font-size: 0.9rem;
+    color: #e67e22;
+    margin-top: 10px;
+    background: #fff8ed;
+    padding: 10px;
+    border-left: 4px solid #e67e22;
+    border-radius: 6px;
+  }
+  .modal-content-wrapper {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .modal-illustration {
+    flex: 1 1 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .modal-illustration img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+  }
+  
+  .modal-form {
+    flex: 1 1 250px;
+  }
+    
+  .modal-content-wrapper {
+    display: flex;
+    gap: 25px;
+    align-items: flex-start;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .modal-illustration.small-illustration {
+    flex: 0 0 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .modal-illustration.small-illustration img {
+    width: 100%;
+    max-width: 100px;
+    height: auto;
+    object-fit: contain;
+    opacity: 0.9;
+  }
+  
+  .modal-form {
+    flex: 1 1 280px;
+  }
+  
+  select option.gold-card {
+    background-color: gold;
+    font-weight: bold;
+    color: black;
+  }
+  

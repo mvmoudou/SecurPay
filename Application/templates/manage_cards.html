@@ -10,87 +10,93 @@
 <div class="cards-container">
     <h2 class="cards-title">Manage your cards</h2>
     
-    <div class="tabs"><div class="custom-tabs">
-    <a href="{{ url_for('card_history') }}" class="tab-btn">
-        <i class="bi bi-clock-history"></i> Historique
-    </a>
-    <button class="tab-btn disabled">
-        <i class="bi bi-plus-circle-fill"></i> Recharger
-    </button>
-</div>
-
+<div class="tabs">
+    <div class="custom-tabs">
+        <a href="{{ url_for('card_history') }}" class="tab-btn">
+            <i class="bi bi-clock-history"></i> Card history
+        </a>
+        <button class="tab-btn " onclick="openRechargeModal()">
+            <i class="bi bi-plus-circle-fill"></i> Recharge card
+        </button>
     </div>
-    
+</div> 
 
     <div class="cards-content">
         <!-- Section gauche -->
         <div class="left-section">
+            <div class="balance-section">
+                <p>Current balance: <strong id="card-balance">-- €</strong></p>
+              </div>
             <div class="carousel-wrapper">
                 {% if cards|length > 0 %}
                     <button class="carousel-btn left" onclick="scrollCarousel(-1)">&#8249;</button>
             
                     <div class="card-carousel" id="card-carousel">
-                        {% for card in cards %}
-                        <div class="carousel-card
-                        {% if card.is_deleted %} deleted-card
-                        {% elif card.is_blocked %} blocked-card
-                        {% elif card.is_opposed %} opposed-card
-                        {% endif %}"
-                        id="card-{{ card.id }}">
+                            {% for card in cards %}
+                        <div class="card-item" data-card-index="{{ loop.index0 }}" data-balance="{{ card.balance }}">
+                                <!-- contenu de la carte -->
+                            
+                            
+                            <div class="carousel-card
+                            {% if card.is_deleted %} deleted-card
+                            {% elif card.is_blocked %} blocked-card
+                            {% elif card.is_opposed %} opposed-card
+                            {% endif %}"
+                            id="card-{{ card.id }}">
 
-                        {% if card.is_deleted %}
-                            <div class="status-badge deleted">Supprimée</div>
-                        {% elif card.is_blocked %}
-                            <div class="status-badge blocked">Bloquée</div>
-                        {% elif card.is_opposed %}
-                            <div class="status-badge opposed">Opposée</div>
-                        {% endif %}
+                            {% if card.is_deleted %}
+                                <div class="status-badge deleted">Supprimée</div>
+                            {% elif card.is_blocked %}
+                                <div class="status-badge blocked">Bloquée</div>
+                            {% elif card.is_opposed %}
+                                <div class="status-badge opposed">Opposée</div>
+                            {% endif %}
 
 
-                            <img src="{{ url_for('static', filename='images/card.png') }}" alt="Card" class="card-image">
-                            <p class="card-owner">
-                                {% if gender == 'Male' %}
-                                    Mr {{ last_name }} {{ first_name }}
-                                {% elif gender == 'Female' %}
-                                    Mrs {{ last_name }} {{ first_name }}
-                                {% else %}
-                                    {{ last_name }} {{ first_name }}
-                                {% endif %}
-                            </p>
-                            <p class="card-number">{{ card.masked_number() }}</p>
-            
-                            <div class="actions">
-                                {% set card_disabled_actions = 'disabled' if card.is_deleted or card.is_opposed else '' %}
-                                {% set card_disabled_delete = 'disabled' if card.is_deleted else '' %}
+                                <img src="{{ url_for('static', filename='images/card.png') }}" alt="Card" class="card-image">
+                                <p class="card-owner">
+                                    {% if gender == 'Male' %}
+                                        Mr {{ last_name }} {{ first_name }}
+                                    {% elif gender == 'Female' %}
+                                        Mrs {{ last_name }} {{ first_name }}
+                                    {% else %}
+                                        {{ last_name }} {{ first_name }}
+                                    {% endif %}
+                                </p>
+                                <p class="card-number">{{ card.masked_number() }}</p>
+                
+                                <div class="actions">
+                                    {% set card_disabled_actions = 'disabled' if card.is_deleted or card.is_opposed else '' %}
+                                    {% set card_disabled_delete = 'disabled' if card.is_deleted else '' %}
+                                
+                                    <div class="action-btn {{ card_disabled_actions }}" data-card-id="{{ card.id }}" onclick="openBlockModal(this)">
+                                        <i class="bi bi-lock-fill"></i>
+                                        <span>{% if card.is_blocked %}Unblock{% else %}Block<br>temporarily{% endif %}</span>
+                                    </div>
+                                
+                                    <div class="action-btn {{ card_disabled_actions }}" data-card-id="{{ card.id }}" onclick="openOpposeModal(this)">
+                                        <i class="bi bi-credit-card-2-back-fill"></i>
+                                        <span>{% if card.is_opposed %}Opposed{% else %}Oppose{% endif %}</span>
+                                    </div>
+                                
+                                    <div class="action-btn {{ card_disabled_actions }}"
+                                            onclick="handleShowSecretCode({{ card.id }})"
+                                            data-card-id="{{ card.id }}">
+                                            <i class="bi bi-eye-fill"></i>
+                                            <span>See<br>secret code</span>
+                                    </div>
                             
-                                <div class="action-btn {{ card_disabled_actions }}" data-card-id="{{ card.id }}" onclick="openBlockModal(this)">
-                                    <i class="bi bi-lock-fill"></i>
-                                    <span>{% if card.is_blocked %}Unblock{% else %}Block<br>temporarily{% endif %}</span>
-                                </div>
-                            
-                                <div class="action-btn {{ card_disabled_actions }}" data-card-id="{{ card.id }}" onclick="openOpposeModal(this)">
-                                    <i class="bi bi-credit-card-2-back-fill"></i>
-                                    <span>{% if card.is_opposed %}Opposed{% else %}Oppose{% endif %}</span>
-                                </div>
-                            
-                                <div class="action-btn {{ card_disabled_actions }}"
-                                        onclick="handleShowSecretCode({{ card.id }})"
-                                        data-card-id="{{ card.id }}">
-                                        <i class="bi bi-eye-fill"></i>
-                                        <span>See<br>secret code</span>
-                                </div>
-                           
-                            
-                                <div class="action-btn {{ card_disabled_delete }}" data-card-id="{{ card.id }}" onclick="openDeleteModal(this)">
-                                    <i class="bi bi-trash-fill"></i>
-                                    <span>Delete</span>
+                                
+                                    <div class="action-btn {{ card_disabled_delete }}" data-card-id="{{ card.id }}" onclick="openDeleteModal(this)">
+                                        <i class="bi bi-trash-fill"></i>
+                                        <span>Delete</span>
+                                    </div>
                                 </div>
                             </div>
-                            
                         </div>
-                        {% endfor %}
-                    </div>
-            
+                            {% endfor %}
+                        
+                </div>
                     <button class="carousel-btn right" onclick="scrollCarousel(1)">&#8250;</button>
                 
                 {% else %}
@@ -419,6 +425,61 @@ function showPopup(message, type = "success", options = {}) {
     // Retourner le popup afin d'utiliser la fonction dans une variable 
     return popup;
 }
+
+function updateVisibleCardBalance() {
+    const carousel = document.getElementById('card-carousel');
+    const cards = carousel.querySelectorAll('.card-item');
+
+    let carouselRect = carousel.getBoundingClientRect();
+    let closestCard = null;
+    let closestDistance = Infinity;
+
+    cards.forEach(card => {
+        let rect = card.getBoundingClientRect();
+        let distance = Math.abs(rect.left - carouselRect.left);
+        if (distance < closestDistance) {
+            closestDistance = distance;
+            closestCard = card;
+        }
+    });
+
+    if (closestCard) {
+        const balance = closestCard.dataset.balance;
+        document.getElementById('card-balance').innerText = `${balance} €`;
+    }
+}
+
+function scrollCarousel(direction) {
+    const carousel = document.getElementById('card-carousel');
+    const cardWidth = carousel.querySelector('.card-item').offsetWidth;
+    carousel.scrollBy({ left: direction * cardWidth, behavior: 'smooth' });
+}
+
+// Initialisation au chargement
+window.addEventListener('DOMContentLoaded', () => {
+    const carousel = document.getElementById('card-carousel');
+    const leftBtn = document.querySelector('.carousel-btn.left');
+    const rightBtn = document.querySelector('.carousel-btn.right');
+
+    // 1. On met à jour au départ
+    updateVisibleCardBalance();
+
+    // 2. Lors d’un clic sur les flèches
+    leftBtn.addEventListener('click', () => setTimeout(updateVisibleCardBalance, 300));
+    rightBtn.addEventListener('click', () => setTimeout(updateVisibleCardBalance, 300));
+
+    // 3. Lors du scroll avec la souris ou trackpad
+    carousel.addEventListener('scroll', () => {
+        // Ajout d'un léger délai pour éviter le spam
+        clearTimeout(carousel._scrollTimeout);
+        carousel._scrollTimeout = setTimeout(() => {
+            updateVisibleCardBalance();
+        }, 100);
+    });
+});
+
+
+
 
 </script>
 {% endblock %}

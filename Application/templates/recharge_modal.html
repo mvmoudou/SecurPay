@@ -1,0 +1,59 @@
+<div id="recharge-modal" class="modal-overlay" style="display: none;">
+    <div class="modal">
+        <span class="close-btn" onclick="closeRechargeModal()">&times;</span>
+      
+        <div class="modal-content-wrapper">
+          <!-- Partie gauche : illustration -->
+          <div class="modal-illustration small-illustration">
+            <img src="{{ url_for('static', filename='images/recharge_card.png') }}" alt="Recharge illustration">
+          </div>
+      
+          <!-- Partie droite : formulaire -->
+          <div class="modal-form">
+            <h2>Recharge a card</h2>
+            <form id="recharge-form" onsubmit="handleRechargeSubmit(event)">
+              <label for="target_card_id">Card to recharge:</label>
+              <select name="target_card_id" required>
+                {% for card in cards %}
+                {% if not card.is_deleted and not card.is_opposed and not card.is_blocked %}
+                <option value="{{ card.id }}"
+                {% if card.id == first_card_id %} class="gold-card" {% endif %}>
+                {{ card.masked_number() }}
+              </option>
+              
+                {% endif %}
+              {% endfor %}
+              
+              </select>
+      
+              {% if cards|length > 1 %}
+                <label for="source_card_id">Card to use for payment:</label>
+                <select name="source_card_id" required>
+                    {% for card in cards %}
+                    {% if not card.is_deleted and not card.is_opposed and not card.is_blocked %}
+                    <option value="{{ card.id }}"
+                    {% if card.id == first_card_id %} class="gold-card" {% endif %}>
+                    {{ card.masked_number() }}
+                  </option>
+                  
+                    {% endif %}
+                  {% endfor %}                  
+                </select>
+              {% else %}
+                <input type="hidden" name="source_card_id" value="none">
+                <p class="first-card-warning">
+                  This is your first card. External recharge will require both email and facial verification.
+                </p>
+              {% endif %}
+      
+              <label for="amount">Amount (€):</label>
+              <input type="number" name="amount" min="1" required>
+      
+              <button type="submit" class="submit-btn">Submit</button>
+            </form>
+          </div>
+        </div>
+      </div>
+        
+  </div>
+  

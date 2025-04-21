@@ -1,0 +1,393 @@
+body {
+  background-color: #14889D;
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.transfer-container {
+  background: white;
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.title {
+  text-align: center;
+  color: #208A9D;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.tabs-transfer {
+  display: flex;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 25px;
+  box-shadow: inset 0 0 4px #ccc;
+}
+
+.tab-transfer {
+  flex: 1;
+  padding: 10px 0;
+  text-align: center;
+  border: none;
+  background: #E0F3F6;
+  color: #208A9D;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.tab-transfer.active {
+  background-color: #208A9D;
+  color: white;
+}
+
+.account-info {
+  padding: 0 10px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.account-title {
+  color: #208A9D;
+  font-weight: bold;
+  font-size: 15px;
+}
+
+.account-name {
+  text-transform: uppercase;
+  font-size: 15px;
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+.account-number {
+  font-size: 14px;
+  color: #208A9D;
+}
+
+.arrow-separator {
+  text-align: center;
+  font-size: 28px;
+  color: #bbb;
+  margin: 10px 0;
+}
+
+.beneficiary-block {
+  background-color: #F2F9FB;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.beneficiary-block h3 {
+  background-color: #208A9D;
+  color: white;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #444;
+}
+
+input[type="text"],
+input[type="number"],
+select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.amount-group {
+  display: flex;
+  gap: 10px;
+}
+
+.amount-group input {
+  flex: 2;
+}
+
+.amount-group select {
+  flex: 1;
+}
+
+.validate-btn {
+  width: 100%;
+  background-color: #208A9D;
+  color: white;
+  border: none;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.validate-btn:hover {
+  background-color: #186e7f;
+}
+
+.actions-transfer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+  text-align: center;
+}
+
+.btn-secondary {
+  border: 2px solid #208A9D;
+  background-color: white;
+  color: #208A9D;
+  font-weight: bold;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background-color: #208A9D;
+  color: white;
+}
+
+.btn-secondary i {
+  margin-right: 6px;
+}
+.tabs-transfer {
+  display: flex;
+  justify-content: center;
+  margin: 20px auto;
+  border-radius: 12px;
+  overflow: hidden;
+  width: fit-content;
+  background-color: #DDF4F8;
+  box-shadow: inset 0 0 2px #b9dce2;
+}
+
+.tab-transfer {
+  flex: 1;
+  padding: 12px 24px;
+  background: transparent;
+  border: none;
+  font-weight: bold;
+  color: #208A9D;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.tab-transfer.active {
+  background-color: #208A9D;
+  color: white;
+  border-radius: 12px 0 0 12px;
+}
+
+.tab-transfer:last-child.active {
+  border-radius: 0 12px 12px 0;
+}
+/* Style de base pour les inputs et selects */
+.transfer-form input[type="text"],
+.transfer-form input[type="number"],
+.transfer-form select {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 16px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  background-color: #f9f9f9;
+}
+
+/* Effet de focus élégant */
+.transfer-form input[type="text"]:focus,
+.transfer-form input[type="number"]:focus,
+.transfer-form select:focus {
+  border-color: #208A9D;
+  box-shadow: 0 0 6px rgba(32, 138, 157, 0.4);
+  background-color: #fff;
+}
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.popup-content {
+  background: #fff;
+  padding: 25px;
+  border-radius: 10px;
+  width: 400px;
+  max-height: 70vh;
+  overflow-y: auto;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+#beneficiary-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+}
+
+#beneficiary-list li {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#beneficiary-list li button {
+  background-color: #208A9D;
+  border: none;
+  color: white;
+  padding: 5px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#beneficiary-list li button:hover {
+  background-color: #186f7a;
+}
+
+.beneficiary-summary {
+  margin-top: 10px;
+  color: #208A9D;
+  font-weight: 500;
+}
+.choose-beneficiary {
+  cursor: pointer;
+  background-color: #208A9D;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  transition: background-color 0.3s;
+}
+
+.choose-beneficiary:hover {
+  background-color: #176a77;
+}
+.hidden {
+  display: none;
+}
+/* Modale overlay */
+#add-beneficiary-modal.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* Contenu de la modale */
+#add-beneficiary-modal .popup-content {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  width: 400px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+/* Titres */
+#add-beneficiary-modal h2 {
+  margin-top: 0;
+  font-size: 22px;
+  color: #208A9D;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* Champs de formulaire */
+#add-beneficiary-form label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: bold;
+  color: #444;
+}
+
+#add-beneficiary-form input[type="text"],
+#add-beneficiary-form select {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+#add-beneficiary-form input[type="text"]:focus,
+#add-beneficiary-form select:focus {
+  border-color: #208A9D;
+  box-shadow: 0 0 6px rgba(32, 138, 157, 0.4);
+  background-color: #fff;
+}
+
+/* Boutons */
+#add-beneficiary-form .validate-btn {
+  width: 100%;
+  background-color: #208A9D;
+  color: white;
+  border: none;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: bold;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+#add-beneficiary-form .validate-btn:hover {
+  background-color: #176a77;
+}
+
+#add-beneficiary-form .btn-secondary {
+  width: 100%;
+  border: 2px solid #208A9D;
+  background-color: white;
+  color: #208A9D;
+  font-weight: bold;
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#add-beneficiary-form .btn-secondary:hover {
+  background-color: #208A9D;
+  color: white;
+}

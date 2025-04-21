@@ -193,6 +193,171 @@ function startPINVerification(cardId, onSuccess) {
     }
   }
 
+  function handleRechargeVerification(targetCardId, sourceCardId, amount) {
+    window.__pinVerificationMode = "recharge";
+  
+    window.__onPINSuccess = () => {
+      console.log("Code vérifié pour recharge");
+  
+      if (sourceCardId === targetCardId && sourceCardId === String(window.__firstCardId)) {
+        console.log("Recharge externe (source == cible == première carte) → déclenche reconnaissance faciale");
+        startRechargeFaceVerification();
+      }
+      else {
+        console.log("Recharge normale → appel direct à /complete_recharge");
+        fetch('/complete_recharge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        })
+        .then(res => {
+          if (res.ok) {
+            showPopup("Recharge completed successfully!");
+            window.location.href = "/manage_cards";
+          } else {
+            showPopup("Recharge failed", "error");
+          }
+        });
+      }
+    };
+  
+    // Lance la vérification par mail (code PIN)
+    startPINVerification(targetCardId, window.__onPINSuccess);
+  }
+  
+  function startRechargeFaceVerification() {
+    const popup = document.getElementById("face-verification-popup");
+    const video = document.getElementById("recharge-video");
+    const canvas = document.getElementById("recharge-canvas");
+    const context = canvas.getContext("2d");
+    const statusText = document.getElementById("face-recharge-status");
+    const loading = document.getElementById("recharge-loading");
+  
+    popup.style.display = "flex";
+    statusText.textContent = "Please align your face with the camera...";
+    loading.style.display = "none";
+  
+    let capturedImages = [];
+    let count = 0;
+    let maxCount = 10;
+  
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+  
+        function captureLoop() {
+          if (count >= maxCount) {
+            verifyRechargeFace();
+            return;
+          }
+  
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          let imgData = canvas.toDataURL('image/jpeg');
+          capturedImages.push(imgData);
+          count++;
+          statusText.textContent = `Capturing ${count}/${maxCount}...`;
+          setTimeout(captureLoop, 800);
+        }
+  
+        setTimeout(captureLoop, 1500); // attend 1.5s avant démarrage
+      });
+  
+    function verifyRechargeFace() {
+      statusText.style.display = "none";
+      loading.style.display = "block";
+  
+      fetch('/verify_recharge_face', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ images: capturedImages })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success') {
+          fetch('/complete_recharge', { method: 'POST' }).then(() => {
+            popup.style.display = "none";
+            showPopup("Recharge successful!");
+            window.location.href = "/manage_cards";
+          });
+        } else {
+          loading.style.display = "none";
+          statusText.style.display = "block";
+          statusText.textContent = "Face verification failed. Please try again.";
+        }
+      })
+      .catch(() => {
+        loading.style.display = "none";
+        statusText.style.display = "block";
+        statusText.textContent = "Error verifying your face.";
+      });
+    }
+  }
+  
+  
+function verifyRechargeFace() {
+      statusText.style.display = "none";
+      loading.style.display = "block";
+  
+      fetch('/verify_recharge_face', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ images: capturedImages })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success') {
+          fetch('/complete_recharge', { method: 'POST' }).then(() => {
+            popup.style.display = "none";
+            showPopup("Recharge successful!");
+            window.location.href = "/manage_cards";
+          });
+        } else {
+          loading.style.display = "none";
+          statusText.style.display = "block";
+          statusText.textContent = "Face verification failed. Please try again.";
+        }
+      })
+      .catch(() => {
+        loading.style.display = "none";
+        statusText.style.display = "block";
+        statusText.textContent = "Error verifying your face.";
+      });
+    }
+
+    function handleBankTransferVerification(transferData) {
+      window.__pinVerificationMode = "bank_transfer";
+  
+      // Cette fonction sera appelée après succès du code PIN
+      window.__onPINSuccess = () => {
+          console.log("Code vérifié pour virement, appel à /complete_transfer");
+  
+          fetch('/complete_transfer', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({})
+          })
+          .then(res => res.json())
+          .then(response => {
+              if (response.success) {
+                  showPopup("Bank transfer completed!", "success");
+                  setTimeout(() => window.location.href = "/home2", 2000);
+              } else {
+                  showPopup(response.error || "Transfer failed.", "error");
+              }
+          })
+          .catch(err => {
+              console.error("Erreur lors du /complete_transfer :", err);
+              showPopup("Error finalizing transfer", "error");
+          });
+      };
+  
+      // Appel l’envoi du code PIN
+      startPINVerification(transferData.source_card_id, window.__onPINSuccess);
+  }
+  
+  
   
   
 window.submitPINVerification = submitPINVerification;

@@ -101,3 +101,20 @@ class CardHistory(db.Model):
 
     card = db.relationship('Card', backref='history')
     user = db.relationship('User')
+
+#-----Les classes pour gérer le virement entre utilisateurs 
+class Beneficiary(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # Celui qui a enregistré ce bénéficiaire
+    name = db.Column(db.String(100))
+    iban = db.Column(db.String(34))  # Pour un format international fictif
+    card_id = db.Column(db.Integer, db.ForeignKey('card.id'))  # Carte vers laquelle on envoie
+
+class Transfer(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    recipient_card_id = db.Column(db.Integer, db.ForeignKey('card.id'))
+    amount = db.Column(db.Float)
+    type = db.Column(db.String(20))  # instant, standard...
+    motive = db.Column(db.String(200))
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)

@@ -45,4 +45,17 @@
   </div>
 </div>
 
-  
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    {% if context == 'recharge' %}
+      window.__pinVerificationMode = "recharge";
+      // On relance automatiquement la vérification dès que la page est chargée
+      {% if session['pending_recharge'] %}
+        const targetCardId = {{ session['pending_recharge']['target_card_id'] }};
+        const sourceCardId = {{ session['pending_recharge'].get('source_card_id', 'null') | safe }};
+        const amount = {{ session['pending_recharge']['amount'] }};
+        handleRechargeVerification(targetCardId, sourceCardId, amount);
+      {% endif %}
+    {% endif %}
+  });
+</script>

@@ -796,5 +796,12 @@
     box-shadow: 0 0 4px rgba(32, 138, 157, 0.5);
   }
     
+  .balance-section {
+    margin-top: 10px;
+    font-size: 1.1rem;
+    color: #208A9D;
+    font-weight: bold;
+  }
+  
   
 

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session, redirect
+from flask import Flask, render_template, request, jsonify, session, redirect, flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta
@@ -10,6 +10,8 @@ from keras_facenet import FaceNet
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
 from models import db, User, Card, CardHistory
+from models import Transfer, Beneficiary
+
 
 # Chargement des variables d’environnement
 load_dotenv()
@@ -244,11 +246,20 @@ def home():
         return render_template('home.html')
     
     # On fait un retour sécurisé avec get
+
+    user = User.query.filter_by(username=session['username']).first()
+    valid_cards = [
+        c for c in user.cards
+        if not c.is_deleted and not c.is_opposed and not c.is_blocked
+    ]
+    main_card = sorted(valid_cards, key=lambda c: c.id)[0]
     return render_template(
         'home2.html',
         username=session.get('username'),
         first_name=session.get('first_name', ''),
-        gender=session.get('gender', '')
+        gender=session.get('gender', ''),
+        user=user,
+        main_card=main_card
     )    
        
 
@@ -257,7 +268,14 @@ def home():
 def home2():
     if 'username' not in session:
         return redirect('/')
-    return render_template('home2.html', username=session['username'], first_name=session['first_name'], show_auth_modals=False)
+    
+    user = User.query.filter_by(username=session['username']).first()
+    valid_cards = [
+        c for c in user.cards
+        if not c.is_deleted and not c.is_opposed and not c.is_blocked
+    ]
+    main_card = sorted(valid_cards, key=lambda c: c.id)[0]
+    return render_template('home2.html',user=user, main_card=main_card, username=session['username'], first_name=session['first_name'], show_auth_modals=False)
 
 @app.route('/about')
 def about():
@@ -413,16 +431,360 @@ def manage_cards():
 
     success = request.args.get('success') == '1'
     user = User.query.filter_by(username=session['username']).first()
+
+    first_card_id = None
+    if user.cards:
+        first_card_id = sorted(user.cards, key=lambda c: c.id)[0].id
+        
     return render_template(
             'manage_cards.html',
             last_name=user.last_name,
             first_name=user.first_name,
             gender=user.gender,
             cards=user.cards,
-            active_page='features'
+            active_page='features',
+            success = success,
+            first_card_id=first_card_id,
+
     )
 
 #-------------Opérations pour la gestion des cartes-----------------#
+
+
+# Préparation de la recharge
+@app.route('/prepare_recharge', methods=['POST'])
+def prepare_recharge():
+    data = request.get_json()
+    if 'username' not in session:
+        return jsonify({'status': 'unauthorized'}), 401
+
+    user = User.query.filter_by(username=session['username']).first()
+    if not user:
+        return jsonify({'status': 'error', 'message': 'User not found'}), 404
+
+    target_id = int(data['target_card_id'])
+    source_id = data['source_card_id']
+    amount = float(data['amount'])
+
+    # Cartes valides uniquement
+    valid_cards = [
+        c for c in user.cards
+        if not c.is_deleted and not c.is_blocked and not c.is_opposed
+    ]
+
+    # Vérifie si la cible est une carte valide
+    if not any(c.id == target_id for c in valid_cards):
+        return jsonify({'status': 'error', 'message': 'Invalid target card'}), 400
+
+    if source_id != "none" and not any(c.id == int(source_id) for c in valid_cards):
+        return jsonify({'status': 'error', 'message': 'Invalid source card'}), 400
+
+    # Nouvelle logique : recharge EXTERNE si source == target == première carte
+    sorted_cards = sorted(user.cards, key=lambda c: c.id)
+    is_external = (
+        len(sorted_cards) >= 1 and
+        str(sorted_cards[0].id) == source_id and
+        str(sorted_cards[0].id) == str(target_id)
+    )
+
+    # Enregistrement en session
+    session['pending_recharge'] = {
+        'user_id': user.id,
+        'target_card_id': target_id,
+        'source_card_id': source_id,
+        'amount': amount
+    }
+
+    return jsonify({ 'status': 'ok', 'external_recharge': is_external })
+
+
+@app.route('/complete_recharge', methods=['POST'])
+def complete_recharge():
+    data = session.get('pending_recharge')
+    if not data:
+        return jsonify({'status': 'error', 'message': 'Session expired'}), 400
+
+    user = User.query.get(data['user_id'])
+    target_card = Card.query.get(data['target_card_id'])
+    amount = data['amount']
+
+    if not target_card or target_card.is_deleted or target_card.is_opposed:
+        return jsonify({'status': 'error', 'message': 'Invalid target card'}), 400
+
+    source_info = ""
+
+    if 'source_card_id' in data and data['source_card_id'] != 'none':
+        source_card_id = int(data['source_card_id'])
+        source_card = Card.query.get(source_card_id)
+
+        # 💡 Si c'est une recharge externe (source == target)
+        if source_card.id == target_card.id:
+            print(f"Recharge EXTERNE de {amount}€ sur carte {target_card.id} via vérification faciale", flush=True)
+        else:
+            if not source_card or source_card.balance < amount or source_card.is_blocked or source_card.is_deleted or source_card.is_opposed:
+                return jsonify({'status': 'error', 'message': 'Invalid source card'}), 400
+
+            source_card.balance -= amount
+            source_info = f"from card {source_card.id}"
+
+    # Créditer la carte cible (même si source == target, on le fait une seule fois)
+    target_card.balance += amount
+
+    print(f"Recharge de {amount}€ {source_info} to card {target_card.id}", flush=True)
+
+    db.session.commit()
+    session.pop('pending_recharge', None)
+
+    return jsonify({'status': 'success'})
+
+
+# Pour recharger la carte de rien, juste la première carte, il faut faire une reconnaissance faciale
+@app.route('/verify_recharge_face', methods=['GET', 'POST'])
+def verify_recharge_face():
+    if request.method == 'GET':
+        return render_template('verify_recharge_face.html')
+
+    try:
+        images = request.get_json().get('images', [])
+    except Exception:
+        return jsonify({'message': "Requête invalide."}), 400
+
+    username = session.get('username')
+    if not username or not images:
+        return jsonify({'message': "Données manquantes."}), 400
+
+    try:
+        with open("embeddings.pkl", "rb") as f:
+            db_embeddings = pickle.load(f)
+    except Exception:
+        return jsonify({'message': "Erreur chargement embeddings."}), 500
+
+    if username not in db_embeddings:
+        return jsonify({'message': "Aucune donnée biométrique pour cet utilisateur."}), 400
+
+    stored_embedding = db_embeddings[username]
+    if isinstance(stored_embedding, list) or (hasattr(stored_embedding, 'shape') and len(np.array(stored_embedding).shape) == 2):
+        stored_embedding = np.mean(np.array(stored_embedding), axis=0)
+
+    match_count = 0
+
+    for image_data in images:
+        try:
+            header, encoded = image_data.split(',', 1)
+            img_bytes = base64.b64decode(encoded)
+            np_img = np.frombuffer(img_bytes, np.uint8)
+            img = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+            results = detector.detect_faces(img)
+            if results:
+                x, y, w, h = results[0]['box']
+                x, y = max(x, 0), max(y, 0)
+                face = img[y:y+h, x:x+w]
+                face = cv2.resize(face, (160, 160))
+                new_embedding = extract_embedding_from_image(img, detector, embedder)
+
+                if new_embedding is not None:
+                    similarity = cosine_similarity(
+                        [new_embedding.flatten()],
+                        [stored_embedding.flatten()]
+                    )[0][0]
+                    print(f"Similarité : {similarity}", flush=True)
+
+                    if similarity > 0.65:
+                        match_count += 1
+        except Exception as e:
+            print("Erreur image :", str(e), flush=True)
+
+    if match_count >= 1:
+        return jsonify({'status': 'success'})
+    else:
+        return jsonify({'status': 'fail', 'message': "Reconnaissance échouée."}), 401
+
+
+#-----POur le virement 
+@app.route('/bank_transfer')
+def bank_transfer():
+    if 'username' not in session:
+        return redirect('/')
+
+    user = User.query.filter_by(username=session['username']).first()
+
+    # Sélectionne la première carte valide
+    valid_cards = [
+        c for c in user.cards
+        if not c.is_deleted and not c.is_opposed and not c.is_blocked
+    ]
+    if not valid_cards:
+        flash("No valid card available for transfer.")
+        return redirect('/manage_cards')
+
+    main_card = sorted(valid_cards, key=lambda c: c.id)[0]
+
+    return render_template(
+        'bank_transfer.html',
+        user=user,
+        main_card=main_card
+    )
+
+
+# Ajouter un bénéficaire
+@app.route('/add_beneficiary', methods=['POST'])
+def add_beneficiary():
+    data = request.json
+    name = data.get("name")
+    iban = data.get("iban")
+    card_number = data.get("card_number")
+
+    # Vérifications simples côté serveur
+    if not card_number or len(card_number) != 19 or not card_number.isdigit():
+        return jsonify(success=False, error="Card number must be 16 digits.")
+    if not iban or len(iban) < 10:
+        return jsonify(success=False, error="Invalid IBAN.")
+
+    user = User.query.filter_by(username=session['username']).first()
+
+    # Création du bénéficiaire sans vérification d'existence réelle
+    new_benef = Beneficiary(
+        user_id=user.id,
+        name=name,
+        iban=iban,
+        card_id=None  # Ou utiliser un champ `card_number_raw` si tu veux le stocker
+    )
+
+    db.session.add(new_benef)
+    db.session.commit()
+
+    return jsonify(success=True)
+
+
+#-- Pour avoir la liste des bénéficiaires lors du virement
+@app.route('/get_beneficiaries')
+def get_beneficiaries():
+    if 'username' not in session:
+        return jsonify({"beneficiaries": []})
+
+    user = User.query.filter_by(username=session['username']).first()
+
+    # Récupérer les bénéficiaires liés à cet utilisateur
+    beneficiaries = Beneficiary.query.filter_by(user_id=user.id).all()
+
+    # Formater les données
+    result = []
+    for b in beneficiaries:
+        # Récupère la carte associée au bénéficiaire
+        card = Card.query.get(b.card_id)
+        if not card or card.is_deleted or card.is_blocked or card.is_opposed:
+            continue  # ignorer les cartes inactives
+
+        result.append({
+            "id": b.id,
+            "full_name": b.name,
+            "card_number_masked": card.masked_number()
+        })
+
+    return jsonify({"beneficiaries": result})
+
+@app.route('/get_user_cards')
+def get_user_cards():
+    if 'username' not in session:
+        return jsonify({"cards": []}), 401
+
+    user = User.query.filter_by(username=session['username']).first()
+    cards = [
+        {
+            "id": c.id,
+            "masked": c.masked_number()
+        }
+        for c in user.cards
+        if not c.is_deleted and not c.is_blocked and not c.is_opposed
+    ]
+
+    return jsonify({"cards": cards})
+
+
+#-----Soumission du virement
+# routes.py
+
+@app.route('/submit_transfer', methods=['POST'])
+def submit_transfer():
+    data = request.json
+    user = User.query.filter_by(username=session['username']).first()
+    main_card = next(c for c in user.cards if not c.is_deleted and not c.is_blocked and not c.is_opposed)
+
+    amount = float(data['amount'])
+
+    if main_card.balance < amount:
+        return jsonify(success=False, error="Insufficient balance")
+
+    # Générer le code de vérification
+    code = f"{random.randint(100000, 999999)}"
+    session['transfer_verification_code'] = code
+    session['pending_transfer'] = data
+
+    # Envoi de mail
+    send_email(
+        to=user.email,
+        subject="Transfer verification code",
+        body=f"Your verification code is: {code}"
+    )
+
+    return jsonify(
+        success=True,
+        verification_required=True,
+        source_card_id=main_card.id  # ✅ Cette ligne est nécessaire pour le frontend
+    )
+
+# Le virement après les vérifications
+@app.route('/complete_transfer', methods=['POST'])
+def complete_transfer():
+    if 'pending_transfer' not in session or 'username' not in session:
+        return jsonify(status='error', message='No pending transfer')
+
+    user = User.query.filter_by(username=session['username']).first()
+    transfer_data = session['pending_transfer']
+
+    # Récupérer la carte principale de l’expéditeur
+    main_card = next(c for c in user.cards if not c.is_deleted and not c.is_blocked and not c.is_opposed)
+
+    # Vérification sécurité
+    amount = float(transfer_data['amount'])
+    beneficiary_id = int(transfer_data['beneficiary_id'])
+
+    if main_card.balance < amount:
+        return jsonify(status='error', message='Insufficient balance')
+
+    # Récupérer la carte destinataire
+    beneficiary = Beneficiary.query.get(beneficiary_id)
+    if not beneficiary:
+        return jsonify(status='error', message='Beneficiary not found')
+
+    recipient_card = Card.query.get(beneficiary.card_id)
+    if not recipient_card or recipient_card.is_blocked or recipient_card.is_deleted or recipient_card.is_opposed:
+        return jsonify(status='error', message='Recipient card unavailable')
+
+    # Effectuer le virement
+    main_card.balance -= amount
+    recipient_card.balance += amount
+
+    # Enregistrer le transfert
+    transfer = Transfer(
+        sender_id=user.id,
+        recipient_card_id=recipient_card.id,
+        amount=amount,
+        type=transfer_data['transfer_type'],
+        motive=transfer_data['motive']
+    )
+    db.session.add(transfer)
+    db.session.commit()
+
+    # Nettoyer la session
+    session.pop('pending_transfer', None)
+    session.pop('transfer_verification_code', None)
+
+    return jsonify(status='success', message='Transfer completed successfully')
+
+
 
 # Bloquer temporairement la carte 
 @app.route('/toggle_block/<int:card_id>', methods=['POST'])
