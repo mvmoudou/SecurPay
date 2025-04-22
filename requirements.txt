@@ -12,3 +12,4 @@ numpy
 opencv-python
 mtcnn
 keras-facenet
+tensorflow==2.15.0
