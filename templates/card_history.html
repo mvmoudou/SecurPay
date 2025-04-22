@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card-history-wrapper">
+  <h2 class="history-title">Historique des actions sur vos cartes</h2>
+
+  {% if history|length == 0 %}
+    <p class="no-history-msg">Aucune action enregistrée.</p>
+  {% else %}
+    <div class="table-wrapper">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Action</th>
+            <th>Numéro</th>
+            <th>Raison</th>
+            <th>Opération</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in history %}
+          <tr>
+            <td>{{ entry.timestamp.strftime('%d/%m/%Y %H:%M') }}</td>
+            <td>{{ entry.action.capitalize() }}</td>
+            <td>{{ entry.card.masked_number() }}</td>
+            <td>{{ entry.reason or 'Non précisée' }}</td>
+            <td>
+              {% if entry.action == 'block' %}
+                <button class="action-btn" onclick="updateCardStatus('{{ entry.card_id }}', 'unblock', this)">Débloquer</button>
+              {% elif entry.action == 'oppose' %}
+                <button class="action-btn" onclick="updateCardStatus('{{ entry.card_id }}', 'revert_oppose', this)">Lever opposition</button>
+              {% elif entry.action == 'delete' and entry.card.is_deleted %}
+                <button class="action-btn" onclick="updateCardStatus('{{ entry.card_id }}', 'restore', this)">Restaurer</button>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+
+.card-history-wrapper {
+  padding: 3rem 5%;
+  max-width: 1400px;
+  margin: auto;
+  min-height: 90vh;
+  background-color: #f7fafa;
+  display: flex;
+  flex-direction: column;
+}
+
+.history-title {
+  text-align: center;
+  font-size: 2.2rem;
+  color: #208A9D;
+  margin-bottom: 2.5rem;
+  font-weight: 700;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+  background-color: white;
+  padding: 1.5rem;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 1rem;
+  table-layout: fixed;
+}
+
+.history-table th,
+.history-table td {
+  padding: 1.3rem 1.5rem;
+  text-align: center;
+  background-color: #fff;
+  font-size: 1rem;
+  color: #444;
+}
+
+.history-table th {
+  background-color: #208A9D;
+  color: white;
+  border: none;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-radius: 8px;
+}
+
+.history-table tbody tr {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+}
+
+.history-table td {
+  border-radius: 12px;
+  background-color: #fdfdfd;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+
+.history-table tbody tr:hover td {
+  background-color: #eaf8fa;
+}
+
+.action-btn {
+  padding: 0.5rem 1.3rem;
+  background-color: #208A9D;
+  width: 100px;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s;
+}
+
+.action-btn:hover {
+  background-color: #166570;
+  transform: translateY(-2px);
+}
+
+.no-history-msg {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #999;
+  margin-top: 4rem;
+}
+</style>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateCardStatus(cardId, action, button) {
+  let url;
+  if (action === 'unblock') url = `/toggle_block/${cardId}`;
+  else if (action === 'revert_oppose') url = `/oppose_card/${cardId}`;
+  else if (action === 'restore') url = `/restore_card/${cardId}`;
+  else return;
+
+  button.disabled = true;
+  button.style.opacity = "0.6";
+  button.innerText = "Traitement...";
+
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reason: 'Action via historique' })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === 'success') {
+      showPopup(data.message, 'success');
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      showPopup(data.message || "Erreur inattendue", 'error');
+      button.disabled = false;
+      button.innerText = "Réessayer";
+    }
+  })
+  .catch(err => {
+    showPopup("Erreur lors de la requête", 'error');
+    button.disabled = false;
+    button.innerText = "Réessayer";
+  });
+}
+</script>
+{% endblock %}

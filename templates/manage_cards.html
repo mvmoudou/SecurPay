@@ -1,0 +1,424 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% if success %}
+    <div class="alert-success" id="success-message">
+        Card added successfully!
+    </div>
+{% endif %}
+
+<div class="cards-container">
+    <h2 class="cards-title">Manage your cards</h2>
+    
+    <div class="tabs"><div class="custom-tabs">
+    <a href="{{ url_for('card_history') }}" class="tab-btn">
+        <i class="bi bi-clock-history"></i> Historique
+    </a>
+    <button class="tab-btn disabled">
+        <i class="bi bi-plus-circle-fill"></i> Recharger
+    </button>
+</div>
+
+    </div>
+    
+
+    <div class="cards-content">
+        <!-- Section gauche -->
+        <div class="left-section">
+            <div class="carousel-wrapper">
+                {% if cards|length > 0 %}
+                    <button class="carousel-btn left" onclick="scrollCarousel(-1)">&#8249;</button>
+            
+                    <div class="card-carousel" id="card-carousel">
+                        {% for card in cards %}
+                        <div class="carousel-card
+                        {% if card.is_deleted %} deleted-card
+                        {% elif card.is_blocked %} blocked-card
+                        {% elif card.is_opposed %} opposed-card
+                        {% endif %}"
+                        id="card-{{ card.id }}">
+
+                        {% if card.is_deleted %}
+                            <div class="status-badge deleted">Supprimée</div>
+                        {% elif card.is_blocked %}
+                            <div class="status-badge blocked">Bloquée</div>
+                        {% elif card.is_opposed %}
+                            <div class="status-badge opposed">Opposée</div>
+                        {% endif %}
+
+
+                            <img src="{{ url_for('static', filename='images/card.png') }}" alt="Card" class="card-image">
+                            <p class="card-owner">
+                                {% if gender == 'Male' %}
+                                    Mr {{ last_name }} {{ first_name }}
+                                {% elif gender == 'Female' %}
+                                    Mrs {{ last_name }} {{ first_name }}
+                                {% else %}
+                                    {{ last_name }} {{ first_name }}
+                                {% endif %}
+                            </p>
+                            <p class="card-number">{{ card.masked_number() }}</p>
+            
+                            <div class="actions">
+                                {% set card_disabled_actions = 'disabled' if card.is_deleted or card.is_opposed else '' %}
+                                {% set card_disabled_delete = 'disabled' if card.is_deleted else '' %}
+                            
+                                <div class="action-btn {{ card_disabled_actions }}" data-card-id="{{ card.id }}" onclick="openBlockModal(this)">
+                                    <i class="bi bi-lock-fill"></i>
+                                    <span>{% if card.is_blocked %}Unblock{% else %}Block<br>temporarily{% endif %}</span>
+                                </div>
+                            
+                                <div class="action-btn {{ card_disabled_actions }}" data-card-id="{{ card.id }}" onclick="openOpposeModal(this)">
+                                    <i class="bi bi-credit-card-2-back-fill"></i>
+                                    <span>{% if card.is_opposed %}Opposed{% else %}Oppose{% endif %}</span>
+                                </div>
+                            
+                                <div class="action-btn {{ card_disabled_actions }}"
+                                        onclick="startPINVerification({{ card.id }})"
+                                        data-card-id="{{ card.id }}">
+                                        <i class="bi bi-eye-fill"></i>
+                                        <span>See<br>secret code</span>
+                                </div>
+                           
+                            
+                                <div class="action-btn {{ card_disabled_delete }}" data-card-id="{{ card.id }}" onclick="openDeleteModal(this)">
+                                    <i class="bi bi-trash-fill"></i>
+                                    <span>Delete</span>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        {% endfor %}
+                    </div>
+            
+                    <button class="carousel-btn right" onclick="scrollCarousel(1)">&#8250;</button>
+                
+                {% else %}
+                    <div class="no-cards-message">
+                        <p>Vous n'avez pas de cartes enregistrées.</p>
+                        <a href="{{ url_for('add_card') }}" class="add-card-button">+ Ajouter une carte</a>
+                    </div>
+                {% endif %}
+            </div>
+            
+        </div>
+
+        <!-- Section droite -->
+        <div class="right-section">
+            <div class="limit">
+                <label>Withdrawal limit</label>
+                <div class="progress-bar">
+                    <div class="progress" style="width: 0%"></div>
+                </div>
+                <p>0% used&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 400€</p>
+            </div>
+
+            <div class="limit">
+                <label>Payment limit</label>
+                <div class="progress-bar">
+                    <div class="progress" style="width: 0%"></div>
+                </div>
+                <p>0% used&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1000€</p>
+            </div>
+
+            <button class="modify-btn">Modify your limit</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODALES POUR RAISONS -->
+<div id="deleteCardModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h2>Supprimer la carte</h2>
+        <form id="deleteCardForm">
+            <input type="hidden" id="deleteCardId" name="card_id">
+            <label for="reason">Raison :</label>
+            <textarea id="deleteReason" name="reason" required placeholder="Entrez la raison ici..."></textarea>
+            <div class="modal-buttons">
+                <button type="submit" class="confirm-btn">Supprimer</button>
+                <button type="button" class="cancel-btn" onclick="closeDeleteModal()">Annuler</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="blockCardModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h2>Bloquer la carte</h2>
+        <form id="blockCardForm">
+            <input type="hidden" id="blockCardId" name="card_id">
+            <label for="reason">Raison :</label>
+            <textarea id="blockReason" name="reason" required placeholder="Entrez la raison ici..."></textarea>
+            <div class="modal-buttons">
+                <button type="submit" class="confirm-btn">Valider</button>
+                <button type="button" class="cancel-btn" onclick="closeBlockModal()">Annuler</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="opposeCardModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h2>Faire opposition</h2>
+        <form id="opposeCardForm">
+            <input type="hidden" id="opposeCardId" name="card_id">
+            <label for="reason">Raison :</label>
+            <textarea id="opposeReason" name="reason" required placeholder="Entrez la raison ici..."></textarea>
+            <div class="modal-buttons">
+                <button type="submit" class="confirm-btn">Valider</button>
+                <button type="button" class="cancel-btn" onclick="closeOpposeModal()">Annuler</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="pin-popup-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content pin-popup">
+      <h2 class="popup-title">Your secret code</h2>
+      <p id="pin-value" class="pin-number">****</p>
+  
+      <div class="countdown-wrapper">
+        <span id="countdown">10</span>s
+        <div class="progress-bar-container">
+          <div id="progress-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% include 'verification.html' %}
+  
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/verification.js') }}"></script>
+
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    const message = document.getElementById('success-message');
+    if (message) {
+        setTimeout(() => {
+            message.style.transition = 'opacity 0.5s ease';
+            message.style.opacity = '0';
+            setTimeout(() => message.remove(), 500);
+        }, 5000);
+    }
+});
+
+function scrollCarousel(direction) {
+    const carousel = document.getElementById('card-carousel');
+    const scrollAmount = 250;
+    carousel.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+}
+
+// Blocage / Déblocage avec raison
+function openBlockModal(elem) {
+    const cardId = elem.getAttribute("data-card-id");
+    document.getElementById("blockCardId").value = cardId;
+    document.getElementById("blockReason").value = "";
+    document.getElementById("blockCardModal").style.display = "flex";
+}
+
+
+
+function closeBlockModal() {
+    document.getElementById("blockCardModal").style.display = "none";
+}
+
+
+function openOpposeModal(elem) {
+    const cardId = elem.getAttribute("data-card-id");
+    document.getElementById("opposeCardId").value = cardId;
+    document.getElementById("opposeReason").value = "";
+    document.getElementById("opposeCardModal").style.display = "flex";
+}
+
+function closeOpposeModal() {
+    document.getElementById("opposeCardModal").style.display = "none";
+}
+// Soumission du formulaire pour le blocage de la carte 
+document.getElementById("blockCardForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const cardId = document.getElementById("blockCardId").value;
+    const reason = document.getElementById("blockReason").value;
+
+    fetch(`/toggle_block/${cardId}`, {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: reason })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "success") {
+            showPopup("Carte mise à jour avec succès", "success");
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showPopup(data.message, "error");
+        }
+        closeBlockModal();
+    })
+    .catch(() => {
+        showPopup("Erreur lors de l'opération.", "error");
+        closeBlockModal();
+    });
+});
+
+//  Soumission du formulaire pour l'opposition et lever l'opposition
+document.getElementById("opposeCardForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const cardId = document.getElementById("opposeCardId").value;
+    const reason = document.getElementById("opposeReason").value;
+
+    fetch(`/oppose_card/${cardId}`, {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: reason })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "success") {
+            showPopup("Carte mise à jour avec succès", "success");
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showPopup(data.message, "error");
+        }
+        closeOpposeModal();
+    })
+    .catch(() => {
+        showPopup("Erreur lors de l'opération.", "error");
+        closeOpposeModal();
+    });
+});
+
+//  Suppression avec raison
+
+function openDeleteModal(elem) {
+    const cardId = elem.getAttribute("data-card-id");
+    document.getElementById("deleteCardId").value = cardId;
+    document.getElementById("deleteReason").value = "";
+    document.getElementById("deleteCardModal").style.display = "flex";
+}
+
+
+function closeDeleteModal() {
+    document.getElementById("deleteCardModal").style.display = "none";
+}
+
+document.getElementById("deleteCardForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const cardId = document.getElementById("deleteCardId").value;
+    const reason = document.getElementById("deleteReason").value;
+
+    fetch(`/delete_card/${cardId}`, {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: reason })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "success") {
+            const cardElement = document.getElementById(`card-${cardId}`);
+            cardElement.classList.add("deleted-card");
+            cardElement.innerHTML = "<p>Carte supprimée</p>";
+            showPopup("Carte supprimée avec succès", "success");
+            closeDeleteModal();
+        } else {
+            showPopup(data.message, "error");
+        }
+    });
+});
+
+// Voir le code PIN (même version pour l’instant)
+function showPIN(elem) {
+    const cardId = elem.getAttribute('data-card-id');
+    fetch(`/card/${cardId}/get_pin`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.pin) {
+                alert("Secret Code: " + data.pin);
+            } else {
+                alert("Error: " + data.error);
+            }
+        });
+}
+
+function showPopup(message, type = "success", options = {}) {
+    const overlay = document.createElement("div");
+    overlay.className = "popup-overlay";
+    document.body.appendChild(overlay);
+
+    const popup = document.createElement("div");
+    popup.className = `popup ${type}`;
+
+    let iconClass = "bi-check-circle-fill";
+    if (type === "error") iconClass = "bi-x-circle-fill";
+    else if (type === "loading") iconClass = "bi-hourglass-split spin-icon";
+    else if (type === "confirm") iconClass = "bi-question-circle-fill";
+
+    popup.innerHTML = `
+        <span class="icon"><i class="bi ${iconClass}"></i></span>
+        <span class="message">${message}</span>
+        ${type !== "loading" && type !== "confirm" ? '<span class="close-btn"><i class="bi bi-x-lg"></i></span>' : ''}
+    `;
+
+    if (type === "confirm") {
+        const btnGroup = document.createElement("div");
+        btnGroup.className = "popup-buttons";
+
+        const confirmBtn = document.createElement("button");
+        confirmBtn.textContent = options.confirmText || "Confirmer";
+        confirmBtn.className = "popup-confirm";
+
+        const cancelBtn = document.createElement("button");
+        cancelBtn.textContent = options.cancelText || "Annuler";
+        cancelBtn.className = "popup-cancel";
+
+        btnGroup.appendChild(confirmBtn);
+        btnGroup.appendChild(cancelBtn);
+        popup.appendChild(btnGroup);
+
+        confirmBtn.addEventListener("click", () => {
+            popup.remove();
+            overlay.remove();
+            if (typeof options.onConfirm === "function") options.onConfirm();
+        });
+
+        cancelBtn.addEventListener("click", () => {
+            popup.remove();
+            overlay.remove();
+            if (typeof options.onCancel === "function") options.onCancel();
+        });
+    }
+
+    if (type === "loading") {
+        const spinner = document.createElement("div");
+        spinner.className = "spinner";
+        popup.appendChild(spinner);
+    }
+
+    document.body.appendChild(popup);
+
+    const closeBtn = popup.querySelector(".close-btn");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", () => {
+            popup.remove();
+            overlay.remove();
+        });
+    }
+
+    if (type !== "loading" && type !== "confirm") {
+        setTimeout(() => {
+            popup.remove();
+            overlay.remove();
+        }, 5000);
+    }
+    
+
+    // Retourner le popup afin d'utiliser la fonction dans une variable 
+    return popup;
+}
+
+</script>
+{% endblock %}

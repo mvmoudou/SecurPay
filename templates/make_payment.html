@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Faire un paiement - PaySecurApp{% endblock %}
+
+{% block content %}
+<div class="make-payment-container">
+    <h2>Choisissez un service à payer</h2>
+
+    <form id="select-service-form">
+        <div class="services-section">
+            {% for service in services %}
+            <label>
+                <input type="radio" name="service" value="{{ service.id }}" data-amount="{{ service.amount }}" data-name="{{ service.name }}">
+                {{ service.name }} - {{ '{:.2f}'.format(service.amount) }} €
+            </label>
+            {% endfor %}
+        </div>
+
+        <h3>Choisissez une carte</h3>
+        <div class="cards-section">
+            {% for card in cards %}
+            <label>
+                <input type="radio" name="card" value="{{ card.id }}" data-number="{{ card.card_number }}" data-expiration="{{ card.expiration }}">
+                Carte se terminant par {{ card.masked_number() }}
+            </label>
+            {% endfor %}
+        </div>
+
+        <button type="button" class="pay-btn" onclick="openPaymentPopup()">Continuer</button>
+    </form>
+</div>
+
+<!-- Inclure ta modale de paiement existante -->
+{% include 'payment.html' %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openPaymentPopup() {
+    const service = document.querySelector('input[name="service"]:checked');
+    const card = document.querySelector('input[name="card"]:checked');
+
+    if (!service || !card) {
+        alert("Veuillez sélectionner un service et une carte.");
+        return;
+    }
+
+    console.log("Montant sélectionné :", service.dataset.amount);
+    console.log("Valeur assignée à amount_hidden :", document.getElementById("amount_hidden").value);
+
+    const popup = document.getElementById("payment-popup");
+    const overlay = document.getElementById("payment-overlay");
+
+    // Pré-remplir les champs
+    document.querySelector('#card_number').value = card.dataset.number;
+    document.querySelector('#amount_display').value = service.dataset.amount + " €";
+    document.querySelector('#expiration').value = card.dataset.expiration;
+
+    document.getElementById("card_id_hidden").value = card.value;
+    document.getElementById("amount_hidden").value = parseFloat(service.dataset.amount);
+
+
+        // Affiche la modale
+    popup.classList.remove("hidden");
+    overlay.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+}
+</script>
+{% endblock %}

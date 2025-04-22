@@ -1,0 +1,55 @@
+<!-- about.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - PaySecurApp</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="about-container">
+        <h1>About PaySecurApp</h1>
+
+        <section>
+            <p><strong>PaySecurApp</strong> is a smart payment app designed to provide a simple, fast, and <strong>highly secure</strong> experience.</p>
+            <p>With advanced authentication technologies (including biometrics), we protect your transactions while saving you time.</p>
+        </section>
+
+        <section>
+            <h2>Our Mission</h2>
+            <p>To simplify daily payments <strong>without compromising security</strong>.</p>
+            <p>Whether it's sending money to a friend, shopping online, or verifying your identity, <strong>PaySecurApp</strong> is here to support you with reliability.</p>
+        </section>
+
+        <section>
+            <h2>Our Values</h2>
+            <ul>
+                <li><strong>Security:</strong> Your data is encrypted and protected</li>
+                <li><strong>Simplicity:</strong> A smooth and intuitive experience</li>
+                <li><strong>Accessibility:</strong> Designed for all types of users</li>
+                <li><strong>Support:</strong> A human and responsive support team</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Why Choose PaySecurApp?</h2>
+            <div class="features">
+                <div class="feature">🔒 Biometric authentication</div>
+                <div class="feature">🧾 Stored history & receipts</div>
+                <div class="feature">📱 Modern & intuitive interface</div>
+                <div class="feature">💬 Fast user support</div>
+                <div class="feature">👁️‍🗨️ Respect for your privacy</div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Our Team's Message</h2>
+            <blockquote>"We didn't just want to build another payment app. We wanted to create one that's trustworthy, practical, and human-centered."</blockquote>
+        </section>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/about.js') }}"></script>
+</body>
+</html>

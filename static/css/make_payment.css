@@ -1,0 +1,141 @@
+.make-payment-container {
+    max-width: 800px;
+    margin: 3rem auto;
+    padding: 2rem;
+    background-color: none;
+    border-radius: 16px;
+    font-family: 'Segoe UI', sans-serif;
+    margin-top: -10px;
+}
+
+.make-payment-container h2,
+.make-payment-container h3 {
+    color: #208A9D;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.services-section,
+.cards-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.services-section label,
+.cards-section label {
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    cursor: pointer;
+    background-color: white;
+    transition: background-color 0.3s, border 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.services-section input[type="radio"],
+.cards-section input[type="radio"] {
+    accent-color: #208A9D;
+    transform: scale(1.2);
+}
+
+.services-section label:hover,
+.cards-section label:hover {
+    background-color: #f0f8fa;
+    border-color: #208A9D;
+}
+
+.pay-btn {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+    background-color: #208A9D;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.pay-btn:hover {
+    background-color: #1a7481;
+}
+
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.3);
+    z-index: 9999;
+}
+
+.popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 30px 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 10000;
+    text-align: center;
+    font-size: 16px;
+    max-width: 90%;
+    width: 350px;
+    transition: all 0.3s ease-in-out;
+}
+
+.popup.success .icon { color: #28a745; }
+.popup.error .icon { color: #dc3545; }
+.popup.loading .icon { color: #208A9D; }
+.popup.confirm .icon { color: #ffc107; }
+
+.popup .icon {
+    font-size: 28px;
+    display: block;
+    margin-bottom: 15px;
+}
+
+.popup .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+}
+
+.popup-buttons {
+    margin-top: 20px;
+}
+
+.popup-buttons button {
+    padding: 8px 16px;
+    margin: 0 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.popup-confirm {
+    background-color: #28a745;
+    color: white;
+}
+
+.popup-cancel {
+    background-color: #dc3545;
+    color: white;
+}
+
+.spin-icon {
+    animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}

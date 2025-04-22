@@ -1,0 +1,15 @@
+{
+    "emmet.includeLanguages": {
+        "html": "html",
+        "javascript": "html"
+    },
+    "emmet.triggerExpansionOnTab": true,
+    "editor.snippetSuggestions": "top",
+    "editor.quickSuggestions": {
+        "other": true,
+        "comments": false,
+        "strings": true
+    },
+    "emmet.showExpandedAbbreviation": "always",
+    "html.autoClosingTags": true
+}

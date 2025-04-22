@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+
+{% block title %}Historique - PaySecurApp{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/historique.css') }}">
+
+<div class="historique-container">
+  <div class="header-section">
+    <div class="logo-title">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="logo" style="height: 32px;">
+      <span class="app-title">PaySecurApp</span>
+    </div>
+    <div class="balance-display">
+      <span class="balance-label">CURRENT BALANCE</span>
+      <span class="balance-value">{{ balance }}$</span>
+    </div>
+  </div>
+
+  <div class="account-info">
+    <div>
+      <strong>MME {{ last_name|upper }} {{ first_name|capitalize }}</strong><br>
+      <small>Overdraft authorization</small><br>
+      <strong>{{ overdraft }} €</strong>
+    </div>
+    <div class="account-id">
+      N°*************{{ user_id }}
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search operations">
+    <button><i class="bi bi-funnel-fill"></i></button>
+  </div>
+
+  <div class="transactions-section">
+    <h3>My transactions</h3>
+    <table id="transactionsTable" class="transaction-table">
+      <thead>
+        <tr>
+          <th>Transaction details</th>
+          <th>Transaction ID</th>
+          <th>Date</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in transactions %}
+        <tr>
+          <td>{{ t.details }} <small>{{ t.type }}</small></td>
+          <td>#{{ t.id }}</td>
+          <td>{{ t.date }}</td>
+          <td class="amount {% if t.amount < 0 %}negative{% else %}positive{% endif %}">{{ '{0:.2f}'.format(t.amount) }}$</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/historique.js') }}"></script>
+{% endblock %}

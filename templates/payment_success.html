@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Paiement effectué{% endblock %}
+
+{% block content %}
+<div class="payment-success">
+    <h2>Paiement réussi </h2>
+    <p>Montant : {{ '{:.2f}'.format(amount|float) if amount else "Non spécifié" }} €</p>
+    <p>Carte utilisée : {{ card.masked_number() }}</p>
+    <a href="/home2" class="btn-return">Retour à l’accueil</a>
+</div>
+{% endblock %}

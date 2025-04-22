@@ -1,0 +1,44 @@
+<!-- payment.html -->
+<div id="payment-popup" class="payment-popup hidden">
+    <h2 class="title">Payment Details</h2>
+    <img src="{{ url_for('static', filename='images/card.png') }}" alt="Cards" class="card-img">
+
+    <form id="payment-form" method="POST" action="/process_payment">
+        <input type="hidden" name="card_id" id="card_id_hidden">
+        <input type="hidden" name="amount" id="amount_hidden">
+        <div class="row">
+            <div class="column">
+                <label>Card Number</label>
+                <input type="text" name="card_number"  id="card_number" placeholder="Valid Card Number" required readonly>    
+            </div>
+            <div class="column">
+                <label>Amount</label>
+                <input type="text" name="amount_display" id="amount_display" placeholder="100€" required readonly>
+            </div>
+        </div>
+        <div class="row">
+            <div class="column">
+                <label>Expiration Date</label>
+                <input type="text" name="expiration" id="expiration" placeholder="MM/YY" required readonly>
+            </div>
+            <div class="column">
+                <label>CV Code</label>
+                <input type="text" name="cvv" id="cvv" placeholder="CVC" required>
+            </div>
+        </div>
+        <input type="hidden" id="payment-amount" value="65"> <!-- ou dynamique -->
+        <input type="hidden" id="payment-card-id" value="12"> <!-- id carte utilisée -->
+        
+        <button type="button" class="pay-btn" onclick="handlePaymentWithVerification()">
+          <i class="bi bi-lock-fill"></i> Payer
+        </button>
+      
+    </form>
+
+    <span class="payment-close"><i class="bi bi-x-lg"></i></span>
+</div>
+
+<div id="payment-overlay" class="payment-overlay hidden"></div>
+{% include 'verification.html' %}
+<script src="{{ url_for('static', filename='js/verification.js') }}"></script>
+
