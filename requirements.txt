@@ -9,7 +9,7 @@ itsdangerous==2.1.2
 Jinja2==3.1.2
 email-validator==2.1.0.post1
 numpy
-import cv2
+cv2
 mtcnn 
 keras_facenet 
 FaceNet
