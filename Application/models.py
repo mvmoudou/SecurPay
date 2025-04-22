@@ -2,6 +2,7 @@ import os
 from flask_sqlalchemy import SQLAlchemy
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
+from flask_login import UserMixin
 
 # Charger les variables d’environnement
 load_dotenv()
@@ -18,7 +19,7 @@ fernet = Fernet(FERNET_KEY.encode())
 
 
 # --- Modèle Utilisateur ---
-class User(db.Model):
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     last_name = db.Column(db.String(100))
     first_name = db.Column(db.String(100))
@@ -87,6 +88,8 @@ class Card(db.Model):
 
     def get_pin(self):
         return fernet.decrypt(self.pin_encrypted).decode()
+    
+
 
 # Pour sauvegarder l'historique des raisons de suppression, blocage, opposition des cartes
 from datetime import datetime
@@ -102,19 +105,23 @@ class CardHistory(db.Model):
     card = db.relationship('Card', backref='history')
     user = db.relationship('User')
 
-#-----Les classes pour gérer le virement entre utilisateurs 
+#-----Les classes pour gérer le virement entre utilisateurs internes 
 class Beneficiary(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # Celui qui a enregistré ce bénéficiaire
-    name = db.Column(db.String(100))
-    iban = db.Column(db.String(34))  # Pour un format international fictif
-    card_id = db.Column(db.Integer, db.ForeignKey('card.id'))  # Carte vers laquelle on envoie
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # L'utilisateur qui ajoute le bénéficiaire
+    beneficiary_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # L'utilisateur ajouté comme bénéficiaire
+
+    owner = db.relationship('User', foreign_keys=[owner_id], backref='beneficiaries')
+    beneficiary = db.relationship('User', foreign_keys=[beneficiary_id])
+
 
 class Transfer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    recipient_card_id = db.Column(db.Integer, db.ForeignKey('card.id'))
-    amount = db.Column(db.Float)
-    type = db.Column(db.String(20))  # instant, standard...
+    receiver_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # interne !
+    amount = db.Column(db.Float, nullable=False)
     motive = db.Column(db.String(200))
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    sender = db.relationship('User', foreign_keys=[sender_id])
+    receiver = db.relationship('User', foreign_keys=[receiver_id])

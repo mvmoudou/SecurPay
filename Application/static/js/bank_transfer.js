@@ -38,13 +38,17 @@ function openBeneficiaryPopup() {
     popup.classList.add("hidden");
   }
   
-  function selectBeneficiary(id, name, cardNumber) {
+  function selectBeneficiary(id, name, maskedCard = null) {
     document.getElementById("selected-beneficiary-id").value = id;
+  
     const summary = document.getElementById("beneficiary-summary");
-    summary.textContent = `Beneficiary: ${name} (${cardNumber})`;
+    summary.textContent = `Selected: ${name}` + (maskedCard ? ` (N° ${maskedCard})` : '');
     summary.classList.remove("hidden");
+  
     closeBeneficiaryPopup();
   }
+  
+  
 
   function handleBankTransferSubmit(event) {
     event.preventDefault();
@@ -83,56 +87,91 @@ function openBeneficiaryPopup() {
     modal.style.display = "none";
     
   }
-  
-  function handleAddBeneficiary(event) {
-    event.preventDefault();
-    const form = document.getElementById('add-beneficiary-form');
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
-  
-    fetch('/add_beneficiary', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(response => {
-      if (response.success) {
-        showPopup("Beneficiary added successfully!");
-        closeAddBeneficiaryModal();
-      } else {
-        showPopup(response.error || "Failed to add beneficiary", "error");
-      }
-    })
-    .catch(() => {
-      showPopup("Server error while adding beneficiary", "error");
-    });
-  }
 
-  function openAddBeneficiaryModal() {
-    fetch('/get_user_cards')
+function handleAddBeneficiary(event) {
+    event.preventDefault();
+  
+    const form = event.target;
+    const identifier = form.identifier.value.trim();
+  
+    fetch("/add_beneficiary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier }),
+    })
       .then(res => res.json())
       .then(data => {
-        const select = document.getElementById("beneficiary-card");
-        select.innerHTML = "";
+        if (data.success) {
+          showPopup(data.message || "Bénéficiaire ajouté avec succès", "success");
+          closeAddBeneficiaryModal();
+          loadBeneficiaries();  // recharge la liste dans le popup si besoin
+        } else {
+          // Affiche l’erreur contrôlée
+          showPopup(data.error || "Erreur inconnue", "error");
+        }
+      })
+      .catch(err => {
+        console.error("Erreur réseau :", err);
+        showPopup("Erreur réseau : impossible d’ajouter le bénéficiaire", "error");
+      });
+  }
   
-        if (!data.cards || data.cards.length === 0) {
-          select.innerHTML = "<option disabled>No cards available</option>";
+  
+  function loadBeneficiaries() {
+    fetch("/api/beneficiaries")
+      .then(res => res.json())
+      .then(data => {
+        const list = document.getElementById("beneficiary-list");
+        list.innerHTML = ""; // Vider la liste avant de la remplir
+  
+        if (data.length === 0) {
+          const li = document.createElement("li");
+          li.textContent = "No beneficiaries added yet.";
+          list.appendChild(li);
           return;
         }
   
-        data.cards.forEach(card => {
-          const option = document.createElement("option");
-          option.value = card.id;
-          option.textContent = card.masked;
-          select.appendChild(option);
+        data.forEach(b => {
+          const li = document.createElement("li");
+  
+          // Nom affiché (prénom/nom ou email)
+          const displayName = b.name || b.username || b.email;
+  
+          const masked = b.card_number_masked || '';
+          li.innerHTML = `
+            <span>${displayName} ${masked ? `(N° ${masked})` : ''}</span>
+            <button onclick="selectBeneficiary(${b.id}, '${displayName}', '${masked}')">Select</button>
+          `;
+          
+  
+          list.appendChild(li);
         });
-        const modal = document.getElementById("add-beneficiary-modal");
-        modal.classList.remove("hidden");
-        modal.style.display = "flex";
-        
+      })
+      .catch(() => {
+        showPopup("Failed to load beneficiaries", "error");
       });
   }
+  
+
+  function openAddBeneficiaryModal() {
+    const modal = document.getElementById("add-beneficiary-modal");
+  
+    if (!modal) {
+      console.error("La modale d’ajout de bénéficiaire n’existe pas dans le DOM.");
+      showPopup("Une erreur est survenue. Veuillez recharger la page et réessayer.", "error");
+      return;
+    }
+  
+    const identifierInput = modal.querySelector('input[name="identifier"]');
+    if (identifierInput) {
+      identifierInput.value = ""; // Reset du champ
+    }
+  
+    modal.classList.remove("hidden");
+    modal.style.display = "flex";
+  }
+  
+  
   
   
   function showPopup(message, type = "success") {

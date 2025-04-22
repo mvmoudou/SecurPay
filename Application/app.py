@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, flash
+from flask import Flask, render_template, request, jsonify, session, redirect, flash, url_for
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta
@@ -11,6 +11,7 @@ from email.mime.text import MIMEText
 from dotenv import load_dotenv
 from models import db, User, Card, CardHistory
 from models import Transfer, Beneficiary
+from flask_login import login_required, current_user, LoginManager
 
 
 # Chargement des variables d’environnement
@@ -32,11 +33,21 @@ EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
 # Init DB
 db.init_app(app)
 
+# ---- ICI on configure Flask-Login ----
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'home'
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 
 
 
 @app.route('/historique')
+@login_required
 def historique():
     if 'username' not in session:
         return redirect('/')
@@ -265,6 +276,7 @@ def home():
 
 
 @app.route('/home2')
+@login_required
 def home2():
     if 'username' not in session:
         return redirect('/')
@@ -359,6 +371,7 @@ def cleanup_failed_registration():
 
 # -------------------- GESTION DES CARTES -------------------- #
 @app.route('/add_card', methods=['GET', 'POST'])
+@login_required
 def add_card():
     if 'username' not in session:
         return redirect('/')
@@ -425,6 +438,7 @@ def add_card():
 
 
 @app.route('/manage_cards')
+@login_required
 def manage_cards():
     if 'username' not in session:
         return redirect('/')
@@ -629,61 +643,76 @@ def bank_transfer():
 
 
 # Ajouter un bénéficaire
+from flask_login import login_required, current_user
+
 @app.route('/add_beneficiary', methods=['POST'])
+@login_required
 def add_beneficiary():
-    data = request.json
-    name = data.get("name")
-    iban = data.get("iban")
-    card_number = data.get("card_number")
+    data = request.get_json()
+    identifier = data.get("identifier")  # nom, email ou username
+    current_user_id = current_user.id
 
-    # Vérifications simples côté serveur
-    if not card_number or len(card_number) != 19 or not card_number.isdigit():
-        return jsonify(success=False, error="Card number must be 16 digits.")
-    if not iban or len(iban) < 10:
-        return jsonify(success=False, error="Invalid IBAN.")
+    # Rechercher un utilisateur correspondant
+    beneficiary = User.query.filter(
+        (User.username == identifier) |
+        (User.email == identifier)
+    ).first()
 
-    user = User.query.filter_by(username=session['username']).first()
+    if not beneficiary:
+        return jsonify(success=False, error="Aucun utilisateur trouvé avec cet identifiant.")
 
-    # Création du bénéficiaire sans vérification d'existence réelle
+    if beneficiary.id == current_user_id:
+        return jsonify(success=False, error="Vous ne pouvez pas vous ajouter vous-même.")
+
+    # Vérifier qu'il a au moins une carte valide
+    valid_card = next((c for c in beneficiary.cards if not (c.is_deleted or c.is_blocked or c.is_opposed)), None)
+
+    if not valid_card:
+        return jsonify(success=False, error="Le bénéficiaire n’a pas de carte active pour recevoir un virement.")
+
+    # Vérifier s'il est déjà enregistré
+    existing = Beneficiary.query.filter_by(owner_id=current_user_id, beneficiary_id=beneficiary.id).first()
+    if existing:
+        return jsonify(success=False, error="Ce bénéficiaire est déjà enregistré.")
+
+    # Ajout
     new_benef = Beneficiary(
-        user_id=user.id,
-        name=name,
-        iban=iban,
-        card_id=None  # Ou utiliser un champ `card_number_raw` si tu veux le stocker
+        owner_id=current_user_id,
+        beneficiary_id=beneficiary.id
     )
 
     db.session.add(new_benef)
     db.session.commit()
 
-    return jsonify(success=True)
+    return jsonify(success=True, message="Bénéficiaire ajouté avec succès.")
 
 
 #-- Pour avoir la liste des bénéficiaires lors du virement
 @app.route('/get_beneficiaries')
+@login_required
 def get_beneficiaries():
-    if 'username' not in session:
-        return jsonify({"beneficiaries": []})
+    user_id = current_user.id
+    beneficiaries = Beneficiary.query.filter_by(owner_id=user_id).all()
 
-    user = User.query.filter_by(username=session['username']).first()
-
-    # Récupérer les bénéficiaires liés à cet utilisateur
-    beneficiaries = Beneficiary.query.filter_by(user_id=user.id).all()
-
-    # Formater les données
-    result = []
+    data = []
     for b in beneficiaries:
-        # Récupère la carte associée au bénéficiaire
-        card = Card.query.get(b.card_id)
-        if not card or card.is_deleted or card.is_blocked or card.is_opposed:
-            continue  # ignorer les cartes inactives
+        receiver = User.query.get(b.beneficiary_id)
+        if receiver:
+            card = Card.query.filter_by(
+                user_id=receiver.id,
+                is_deleted=False,
+                is_blocked=False,
+                is_opposed=False
+            ).first()
+            if card:
+                data.append({
+                    "id": b.id,
+                    "full_name": f"{receiver.first_name} {receiver.last_name}",
+                    "card_number_masked": card.masked_number()
+                })
 
-        result.append({
-            "id": b.id,
-            "full_name": b.name,
-            "card_number_masked": card.masked_number()
-        })
+    return jsonify({"beneficiaries": data})
 
-    return jsonify({"beneficiaries": result})
 
 @app.route('/get_user_cards')
 def get_user_cards():

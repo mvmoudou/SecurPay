@@ -65,6 +65,14 @@
    <!-- Pour confirmer la suite de l'enregistement-->
   <button id="open-signup" style="display:none;"></button>
 
-
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('login_required') === 'true') {
+        loadModal('login_modal'); // ou autre méthode qui ouvre le popup
+      }
+    });
+  </script>
+  
 </body>
 </html>

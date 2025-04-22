@@ -78,19 +78,15 @@
   <div class="popup-content">
     <h2>Add a Beneficiary</h2>
     <form id="add-beneficiary-form" onsubmit="handleAddBeneficiary(event)">
-      <label>Full name:</label>
-      <input type="text" name="name" required>
-    
-      <label>IBAN:</label>
-      <input type="text" name="iban" required>
-    
-      <label>Card Number (last 4 digits or full):</label>
-      <input type="text" name="card_number" id="beneficiary-card" required pattern="\\d{19}" title="19 digits required">
-    
+      <label>Username or Email of the beneficiary:</label>
+      <input type="text" name="identifier" placeholder="username or email" required>
+
+
       <button type="submit" class="validate-btn">Add</button>
       <button type="button" class="btn-secondary" onclick="closeAddBeneficiaryModal()">Cancel</button>
     </form>
-      </div>
+    
+  </div>
 </div>
 
 
