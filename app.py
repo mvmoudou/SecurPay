@@ -115,8 +115,13 @@ def signup_modal():
 
 @app.route('/process-faces')
 def process_faces():
+    print("/process-faces appelé")
+    print("session[username]:", session.get("temp_username"))
+
     try:
         username = session.get('temp_username')
+        print("Utilisateur temporaire :", username)
+
         if not username:
             return jsonify({"message": "Session expirée"}), 400
 
@@ -129,6 +134,8 @@ def process_faces():
             return jsonify({"message": "Inscription annulée"}), 400
 
         embeddings = process_faces_internal()
+        print("Embeddings générés :", embeddings)
+
 
         if not embeddings:
             raise Exception("Aucun visage valide détecté.")

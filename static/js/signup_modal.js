@@ -182,7 +182,7 @@ async function setupBiometricsCapture() {
     
          
 
-            const biometricRes = await fetch("/process-faces");
+            const biometricRes = await fetch("/process-faces", { method: "GET" });
             const biometricResult = await biometricRes.json();
 
           
