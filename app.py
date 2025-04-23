@@ -171,6 +171,8 @@ def process_faces():
 
     
 
+import gc  # À ajouter tout en haut de ton fichier si pas encore fait
+
 def process_faces_internal():
     if not session.get("pending_registration") or session.get("registration_cancelled"):
         print("Traitement annulé dans process_faces_internal.")
@@ -181,15 +183,31 @@ def process_faces_internal():
     detector = MTCNN()
     embedder = FaceNet()
 
-    for filename in os.listdir(folder):
-        if filename.endswith('.png'):
-            path = os.path.join(folder, filename)
-            img = cv2.imread(path)
-            emb = extract_embedding_from_image(img, detector, embedder)
-            if emb is not None:
-                embeddings.append(emb)
+    print(f"Lecture des images dans : {folder}")
+    files = [f for f in os.listdir(folder) if f.endswith('.png')]
+    print(f"{len(files)} images trouvées.")
 
+    for filename in files:
+        path = os.path.join(folder, filename)
+        img = cv2.imread(path)
+        emb = extract_embedding_from_image(img, detector, embedder)
+
+        if emb is not None:
+            embeddings.append(emb)
+            print(f" Visage détecté dans {filename} — total valides : {len(embeddings)}")
+
+        # Libération de mémoire
+        del img
+        del emb
+        gc.collect()
+
+        if len(embeddings) >= 10:
+            print("Limite de 10 visages atteinte, arrêt anticipé.")
+            break
+
+    print(f"Total d'embeddings retenus : {len(embeddings)}")
     return embeddings
+
 
 #-------Vérifier l'état de l'enregistrement des données 
 @app.route('/check-registration-status')
