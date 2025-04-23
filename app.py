@@ -258,8 +258,6 @@ def update_embeddings(username, new_embeddings, path='embeddings.pkl'):
 # Pour les conditions générales d'utilisation
 @app.route('/terms')
 def terms():
-    if "username" not in session:
-        return redirect('/')
     from_page = request.args.get("from", "")
     return render_template('terms.html', from_page=from_page)
 
@@ -368,8 +366,10 @@ def cleanup_failed_registration():
 
 
 # -------------------- GESTION DES CARTES -------------------- #
+
 @app.route('/add_card', methods=['GET', 'POST'])
 def add_card():
+    print("==> Route /add_card appelée")
     if 'username' not in session:
         return redirect('/')
 
@@ -433,22 +433,36 @@ def add_card():
 
     return render_template('add_card.html', first_name=user.first_name, last_name=user.last_name)
 
+@app.route('/debug_session')
+def debug_session():
+    return jsonify(dict(session))
+
 
 @app.route('/manage_cards')
 def manage_cards():
-    if 'username' not in session:
-        return redirect('/')
+    try:
+        if 'username' not in session:
+            print("Pas de session active")
+            return redirect('/')
 
-    success = request.args.get('success') == '1'
-    user = User.query.filter_by(username=session['username']).first()
-    return render_template(
+        user = User.query.filter_by(username=session['username']).first()
+        if not user:
+            print("Utilisateur introuvable :", session['username'])
+            return redirect('/')
+
+        print("Utilisateur trouvé :", user.username)
+
+        return render_template(
             'manage_cards.html',
             last_name=user.last_name,
             first_name=user.first_name,
             gender=user.gender,
             cards=user.cards,
             active_page='features'
-    )
+        )
+    except Exception as e:
+        print("ERREUR manage_cards :", str(e))
+        return f"Erreur serveur : {str(e)}", 500
 
 #-------------Opérations pour la gestion des cartes-----------------#
 
