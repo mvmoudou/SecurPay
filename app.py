@@ -133,8 +133,10 @@ def process_faces():
             print("Traitement refusé : utilisateur a annulé l'inscription.")
             return jsonify({"message": "Inscription annulée"}), 400
 
+        print("📌 Avant traitement biométrique")
         embeddings = process_faces_internal()
         print("Embeddings générés :", embeddings)
+        print("Avant traitement biométrique")
 
 
         if not embeddings:
@@ -173,6 +175,8 @@ def process_faces():
 
 import gc  # À ajouter tout en haut de ton fichier si pas encore fait
 
+detector = MTCNN()
+embedder = FaceNet()
 def process_faces_internal():
     if not session.get("pending_registration") or session.get("registration_cancelled"):
         print("Traitement annulé dans process_faces_internal.")
@@ -180,8 +184,7 @@ def process_faces_internal():
 
     folder = os.path.join('static', 'faces', 'user_temp')
     embeddings = []
-    detector = MTCNN()
-    embedder = FaceNet()
+
 
     print(f"Lecture des images dans : {folder}")
     files = [f for f in os.listdir(folder) if f.endswith('.png')]
