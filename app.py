@@ -133,7 +133,7 @@ def process_faces():
             print("Traitement refusé : utilisateur a annulé l'inscription.")
             return jsonify({"message": "Inscription annulée"}), 400
 
-        print("📌 Avant traitement biométrique")
+        print("Avant traitement biométrique")
         embeddings = process_faces_internal()
         print("Embeddings générés :", embeddings)
         print("Avant traitement biométrique")

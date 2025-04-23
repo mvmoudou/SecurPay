@@ -2,6 +2,7 @@ import os
 from flask_sqlalchemy import SQLAlchemy
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
+from sqlalchemy.orm import deferred
 
 # Charger les variables d’environnement
 load_dotenv()
@@ -40,7 +41,7 @@ class User(db.Model):
 # --- Modèle Carte Bancaire avec chiffrement du numéro et du CVV ---
 class Card(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    _card_number = db.Column("card_number", db.LargeBinary, nullable=False)  # Champ chiffré
+    _card_number = deferred(db.Column("card_number", db.LargeBinary, nullable=False)) # Champ chiffré
     expiration = db.Column(db.String(7), nullable=False)
     _cvv = db.Column("cvv", db.LargeBinary, nullable=False)  # Champ chiffré
     holder_name = db.Column(db.String(100), nullable=False)
