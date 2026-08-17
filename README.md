@@ -131,7 +131,7 @@ Ce projet est un prototype à but pédagogique/démonstratif. Certaines pratique
 
 ## Auteurs
 
-SIDIBE Mamoudou
-ROSALIE Corine
-WIAM 
-LÉNO CELESTINE
+- SIDIBE Mamoudou
+- ROSALIE Corine
+- WIAM 
+- LÉNO CELESTINE
